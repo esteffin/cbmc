@@ -115,6 +115,11 @@ std::ostream &format_rec(std::ostream &os, const typet &type)
     os << u8" \u2192 "; // → -- we don't use ⟶  since that doesn't render well
     return os << format(mathematical_function.codomain());
   }
+  else if(id == "expression")
+  {
+    const auto &expression_type = to_type_with_subtype(type);
+    return os << format(expression_type.subtype()) << " expr";
+  }
   else
     return os << id;
 }
