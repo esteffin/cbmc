@@ -346,6 +346,14 @@ optionalt<bvt> bv_pointerst::convert_address_of_rec(const exprt &expr)
 
     return bv_utils.select(cond, *bv1_opt, *bv2_opt);
   }
+  else if(expr.id() == ID_dereference)
+  {
+    // the address of *p is p
+    const std::size_t bits = boolbv_width(expr.type());
+    auto bv = convert_bv(to_dereference_expr(expr).pointer());
+    CHECK_RETURN(bv.size() == bits);
+    return bv;
+  }
 
   return {};
 }
