@@ -2323,7 +2323,7 @@ exprt c_typecheck_baset::do_special_functions(
     if(expr.arguments()[0].type().id() != ID_pointer)
     {
       error().source_location = expr.arguments()[0].source_location();
-      error() << "cstring expects a pointer operand" << eom;
+      error() << "is_cstring expects a pointer operand" << eom;
       throw 0;
     }
 
@@ -2332,6 +2332,29 @@ exprt c_typecheck_baset::do_special_functions(
     is_cstring_expr.add_source_location()=source_location;
 
     return std::move(is_cstring_expr);
+  }
+  else if(identifier==CPROVER_PREFIX "cstrlen")
+  {
+    if(expr.arguments().size()!=1)
+    {
+      error().source_location = f_op.source_location();
+      error() << "cstrlen expects one operand" << eom;
+      throw 0;
+    }
+
+    typecheck_function_call_arguments(expr);
+
+    if(expr.arguments()[0].type().id() != ID_pointer)
+    {
+      error().source_location = expr.arguments()[0].source_location();
+      error() << "cstrlen expects a pointer operand" << eom;
+      throw 0;
+    }
+
+    unary_exprt cstrlen_expr("cstrlen", expr.arguments()[0], size_type());
+    cstrlen_expr.add_source_location()=source_location;
+
+    return std::move(cstrlen_expr);
   }
   else if(identifier==CPROVER_PREFIX "is_zero_string")
   {
