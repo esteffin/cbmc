@@ -1,0 +1,9 @@
+KNOWNBUG
+struct3.c
+--text
+^EXIT=0$
+^SIGNAL=0$
+^program is safe / function main is safe / line .* property 1: SUCCESS$
+^program is safe / function main is safe / line .* property 2: SUCCESS$
+^program is safe / function main is safe / line .* property 3: SUCCESS$
+--

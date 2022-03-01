@@ -1,0 +1,8 @@
+CORE
+call_no_body1.c
+--text
+^EXIT=0$
+^SIGNAL=0$
+^\(\d+\) ∀ ς : state \. S21\(ς\) ⇒ S22\(ς\[❝main::\$tmp::return_value_function_without_body❞:=nondet::S22\]\)$
+^\(\d+\) ∀ ς : state \. S22\(ς\) ⇒ S23\(ς\[❝main::1::x❞:=ς\(❝main::\$tmp::return_value_function_without_body❞\)\]\)$
+--
