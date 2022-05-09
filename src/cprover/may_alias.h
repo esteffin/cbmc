@@ -18,8 +18,6 @@ Author:
 
 class namespacet;
 
-bool permitted_by_strict_aliasing(const typet &, const typet &);
-
 bool is_object_field_element(const exprt &);
 
 // check whether to addresses are the same

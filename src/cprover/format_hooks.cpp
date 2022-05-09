@@ -105,4 +105,12 @@ void format_hooks()
       return os << "live_object(" << format(live_object_expr.op0()) << ", "
                 << format(live_object_expr.op1()) << ')';
     });
+
+  add_format_hook(
+    ID_state_writeable_object,
+    [](std::ostream &os, const exprt &expr) -> std::ostream & {
+      const auto &writeable_object_expr = to_binary_expr(expr);
+      return os << "writeable_object(" << format(writeable_object_expr.op0())
+                << ", " << format(writeable_object_expr.op1()) << ')';
+    });
 }

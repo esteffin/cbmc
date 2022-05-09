@@ -17,6 +17,11 @@ Author:
 
 void report_properties(const std::vector<propertyt> &);
 
+void report_traces(
+  const std::vector<framet> &,
+  const std::vector<propertyt> &,
+  const namespacet &);
+
 solver_resultt overall_outcome(const std::vector<propertyt> &);
 
 #endif // CPROVER_CPROVER_REPORT_PROPERTIES_H

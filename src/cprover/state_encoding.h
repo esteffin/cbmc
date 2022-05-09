@@ -33,7 +33,7 @@ void state_encoding(
 solver_resultt state_encoding_solver(
   const goto_modelt &,
   bool program_is_inlined,
-  std::size_t loop_limit);
+  const solver_optionst &);
 
 void variable_encoding(
   const goto_modelt &,

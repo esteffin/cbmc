@@ -20,6 +20,7 @@ void propagate(
   const std::vector<framet> &,
   const workt &,
   const std::unordered_set<symbol_exprt, irep_hash> &address_taken,
+  bool verbose,
   const namespacet &,
   const std::function<void(const symbol_exprt &, exprt, const workt::patht &)>
     &propagator);

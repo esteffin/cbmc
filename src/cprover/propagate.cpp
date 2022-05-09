@@ -23,14 +23,18 @@ void propagate(
   const std::vector<framet> &frames,
   const workt &work,
   const std::unordered_set<symbol_exprt, irep_hash> &address_taken,
+  bool verbose,
   const namespacet &ns,
   const std::function<void(const symbol_exprt &, exprt, const workt::patht &)>
     &propagator)
 {
-  std::cout << "PROP";
-  for(const auto &p : work.path)
-    std::cout << ' ' << p.index;
-  std::cout << ": " << format(work.invariant) << '\n';
+  if(verbose)
+  {
+    std::cout << "PROP";
+    for(const auto &p : work.path)
+      std::cout << ' ' << p.index;
+    std::cout << ": " << format(work.invariant) << '\n';
+  }
 
   auto &f = frames[work.frame.index];
 

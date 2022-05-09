@@ -211,6 +211,39 @@ exprt simplify_live_object_expr(binary_exprt src, const namespacet &ns)
   return std::move(src);
 }
 
+exprt simplify_writeable_object_expr(
+  state_writeable_object_exprt src,
+  const namespacet &ns)
+{
+  const auto &pointer = src.address();
+
+  auto object = simplify_object_expression(pointer);
+
+  if(object.id() == ID_object_address)
+  {
+    auto identifier = to_object_address_expr(object).object_identifier();
+
+    if(has_prefix(id2string(identifier), "allocate-"))
+    {
+    }
+    else
+    {
+      const auto &symbol = ns.lookup(identifier);
+      return make_boolean_expr(!symbol.type.get_bool(ID_C_constant));
+    }
+  }
+
+  // A store does not affect the result.
+  // writeable_object(ς[A:=V]), p) --> writeable_object(ς, p)
+  if(src.state().id() == ID_update_state)
+  {
+    src.state() = to_update_state_expr(src.state()).state();
+    return std::move(src);
+  }
+
+  return std::move(src);
+}
+
 exprt simplify_is_dynamic_object_expr(state_is_dynamic_object_exprt src)
 {
   const auto &pointer = src.address();
@@ -430,7 +463,12 @@ exprt simplify_state_expr_node(
   }
   else if(src.id() == ID_state_live_object)
   {
-    return simplify_live_object_expr(to_binary_expr(src), ns);
+    return simplify_live_object_expr(to_state_live_object_expr(src), ns);
+  }
+  else if(src.id() == ID_state_writeable_object)
+  {
+    return simplify_writeable_object_expr(
+      to_state_writeable_object_expr(src), ns);
   }
   else if(src.id() == ID_state_is_cstring)
   {

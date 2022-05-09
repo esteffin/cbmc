@@ -58,6 +58,7 @@ bool counterexample_found(
   const std::vector<framet> &frames,
   const workt &work,
   const std::unordered_set<symbol_exprt, irep_hash> &address_taken,
+  bool verbose,
   const namespacet &ns)
 {
   auto &f = frames[work.frame.index];
@@ -67,9 +68,10 @@ bool counterexample_found(
     if(implication.lhs.is_true())
     {
       cout_message_handlert message_handler;
+      message_handler.set_verbosity(verbose ? 10 : 1);
       satcheckt satcheck(message_handler);
       bv_pointers_widet solver(ns, satcheck, message_handler);
-      axiomst axioms(solver, address_taken, ns);
+      axiomst axioms(solver, address_taken, verbose, ns);
 
       // these are initial states, i.e., true ⇒ SInitial(ς)
       axioms.set_to_false(work.invariant);
@@ -80,7 +82,8 @@ bool counterexample_found(
       switch(solver())
       {
       case decision_proceduret::resultt::D_SATISFIABLE:
-        show_assignment(solver);
+        if(verbose)
+          show_assignment(solver);
         return true;
       case decision_proceduret::resultt::D_UNSATISFIABLE:
         break;

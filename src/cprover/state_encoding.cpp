@@ -235,6 +235,13 @@ exprt state_encodingt::evaluate_expr_rec(
       evaluate_expr_rec(loc, state, live_object_expr.pointer(), bound_symbols);
     return state_live_object_exprt(state, pointer);
   }
+  else if(what.id() == ID_writeable_object)
+  {
+    const auto &writeable_object_expr = to_writeable_object_expr(what);
+    auto pointer = evaluate_expr_rec(
+      loc, state, writeable_object_expr.pointer(), bound_symbols);
+    return state_writeable_object_exprt(state, pointer);
+  }
   else if(what.id() == ID_is_dynamic_object)
   {
     const auto &is_dynamic_object_expr = to_is_dynamic_object_expr(what);
@@ -457,6 +464,26 @@ void state_encodingt::function_call_symbol(
     return;
   }
 
+  // realloc is special-cased
+  if(identifier == "realloc")
+  {
+    auto state = state_expr();
+    PRECONDITION(loc->call_arguments().size() == 2);
+    auto pointer_evaluated =
+      evaluate_expr(loc, state, loc->call_arguments()[0]);
+    auto size_evaluated = evaluate_expr(loc, state, loc->call_arguments()[1]);
+
+    auto lhs_address = address_rec(loc, state, loc->call_lhs());
+    auto lhs_type = to_pointer_type(lhs_address.type());
+    exprt new_state = update_state_exprt(
+      state,
+      lhs_address,
+      reallocate_exprt(state, pointer_evaluated, size_evaluated, lhs_type));
+    dest << forall_states_expr(
+      loc, function_application_exprt(out_state_expr(loc), {new_state}));
+    return;
+  }
+
   // free is special-cased
   if(identifier == "free")
   {
@@ -492,44 +519,49 @@ void state_encodingt::function_call_symbol(
       dest << equal_exprt(out_state_expr(loc), in_state_expr(loc));
     }
   }
-
-  // Evaluate the arguments of the call in the 'in state'
-  exprt arguments_state = state_expr();
-
-  for(std::size_t i = 0; i < type.parameters().size(); i++)
+  else
   {
-    auto address = object_address_exprt(symbol_exprt(
-      f->second.parameter_identifiers[i], type.parameters()[i].type()));
-    auto argument = loc->call_arguments()[i];
-    auto value = evaluate_expr(loc, state_expr(), argument);
-    arguments_state = update_state_exprt(arguments_state, address, value);
+    // Yes, we've got a body.
+
+    // Evaluate the arguments of the call in the 'in state'
+    exprt arguments_state = state_expr();
+
+    for(std::size_t i = 0; i < type.parameters().size(); i++)
+    {
+      auto address = object_address_exprt(symbol_exprt(
+        f->second.parameter_identifiers[i], type.parameters()[i].type()));
+      auto argument = loc->call_arguments()[i];
+      auto value = evaluate_expr(loc, state_expr(), argument);
+      arguments_state = update_state_exprt(arguments_state, address, value);
+    }
+
+    // Now assign them
+    auto function_entry_state = state_expr_with_suffix(loc, "Entry");
+    dest << forall_states_expr(
+      loc, function_application_exprt(function_entry_state, {arguments_state}));
+
+    // now do the body, recursively
+    state_encodingt body_state_encoding(goto_functions);
+    auto new_state_prefix =
+      state_prefix + std::to_string(loc->location_number) + ".";
+    body_state_encoding.encode(
+      f->second,
+      new_state_prefix,
+      new_annotation,
+      function_entry_state,
+      nil_exprt(),
+      dest);
+
+    // exit state of called function
+    auto exit_loc = std::prev(f->second.body.instructions.end());
+    irep_idt exit_state_identifier =
+      new_state_prefix + std::to_string(exit_loc->location_number);
+    auto exit_state =
+      symbol_exprt(exit_state_identifier, state_predicate_type());
+
+    // now link up return state
+    dest << equal_exprt(out_state_expr(loc), std::move(exit_state));
   }
-
-  // Now assign them
-  auto function_entry_state = state_expr_with_suffix(loc, "Entry");
-  dest << forall_states_expr(
-    loc, function_application_exprt(function_entry_state, {arguments_state}));
-
-  // now do the body, recursively
-  state_encodingt body_state_encoding(goto_functions);
-  auto new_state_prefix =
-    state_prefix + std::to_string(loc->location_number) + ".";
-  body_state_encoding.encode(
-    f->second,
-    new_state_prefix,
-    new_annotation,
-    function_entry_state,
-    nil_exprt(),
-    dest);
-
-  // exit state of called function
-  auto exit_loc = std::prev(f->second.body.instructions.end());
-  irep_idt exit_state_identifier =
-    new_state_prefix + std::to_string(exit_loc->location_number);
-  auto exit_state = symbol_exprt(exit_state_identifier, state_predicate_type());
-
-  // now link up return state
-  dest << equal_exprt(out_state_expr(loc), std::move(exit_state));
 }
 
 void state_encodingt::function_call(
@@ -822,7 +854,7 @@ void variable_encoding(
 solver_resultt state_encoding_solver(
   const goto_modelt &goto_model,
   bool program_is_inlined,
-  std::size_t loop_limit)
+  const solver_optionst &solver_options)
 {
   const namespacet ns(goto_model.symbol_table);
 
@@ -833,8 +865,11 @@ solver_resultt state_encoding_solver(
 
   equality_propagation(container.constraints);
 
-  ascii_encoding_targett dest(std::cout);
-  dest << container;
+  if(solver_options.verbose)
+  {
+    ascii_encoding_targett dest(std::cout);
+    dest << container;
+  }
 
-  return solver(container.constraints, loop_limit, ns);
+  return solver(container.constraints, solver_options, ns);
 }

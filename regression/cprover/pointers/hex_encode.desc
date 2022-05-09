@@ -1,5 +1,5 @@
 CORE
-aws_hash_table_eq_contract.c
+hex_encode.c
 --safety
 ^EXIT=0$
 ^SIGNAL=0$

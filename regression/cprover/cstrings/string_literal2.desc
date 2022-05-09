@@ -1,5 +1,5 @@
 CORE
-aws_hash_table_clear_contract.c
+string_literal2.c
 --safety
 ^EXIT=0$
 ^SIGNAL=0$

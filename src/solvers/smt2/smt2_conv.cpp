@@ -1611,6 +1611,16 @@ void smt2_convt::convert_expr(const exprt &expr)
     convert_expr(to_binary_expr(expr).op1());
     out << ')';
   }
+  else if(expr.id() == ID_reallocate)
+  {
+    out << "(reallocate ";
+    convert_expr(to_ternary_expr(expr).op0());
+    out << ' ';
+    convert_expr(to_ternary_expr(expr).op1());
+    out << ' ';
+    convert_expr(to_ternary_expr(expr).op2());
+    out << ')';
+  }
   else if(expr.id() == ID_deallocate_state)
   {
     out << "(deallocate ";
@@ -5075,6 +5085,23 @@ void smt2_convt::find_symbols(const exprt &expr)
       convert_type(to_binary_expr(expr).op0().type());
       out << ' ';
       convert_type(to_binary_expr(expr).op1().type());
+      out << ") ";
+      convert_type(expr.type()); // return type
+      out << ")\n";              // declare-fun
+    }
+  }
+  else if(expr.id() == ID_reallocate)
+  {
+    irep_idt function = "reallocate";
+
+    if(state_fkt_declared.insert(function).second)
+    {
+      out << "(declare-fun " << function << " (";
+      convert_type(to_ternary_expr(expr).op0().type());
+      out << ' ';
+      convert_type(to_ternary_expr(expr).op1().type());
+      out << ' ';
+      convert_type(to_ternary_expr(expr).op2().type());
       out << ") ";
       convert_type(expr.type()); // return type
       out << ")\n";              // declare-fun

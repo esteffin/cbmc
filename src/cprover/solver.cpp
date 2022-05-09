@@ -72,10 +72,11 @@ std::vector<framet> setup_frames(const std::vector<exprt> &constraints)
 
   for(auto &c : constraints)
   {
-    free_symbols(c, [&states_set, &frames](const symbol_exprt &s) {
+    auto &location = c.source_location();
+    free_symbols(c, [&states_set, &location, &frames](const symbol_exprt &s) {
       auto insert_result = states_set.insert(s);
       if(insert_result.second)
-        frames.emplace_back(s, frame_reft(frames.size()));
+        frames.emplace_back(s, location, frame_reft(frames.size()));
     });
   }
 
@@ -202,6 +203,7 @@ bool is_subsumed(
   const std::vector<exprt> &a2,
   const exprt &b,
   const std::unordered_set<symbol_exprt, irep_hash> &address_taken,
+  bool verbose,
   const namespacet &ns)
 {
   if(b.is_true())
@@ -216,9 +218,10 @@ bool is_subsumed(
       return true; // b is subsumed by a conjunct in a
 
   cout_message_handlert message_handler;
+  message_handler.set_verbosity(verbose ? 10 : 1);
   satcheckt satcheck(message_handler);
   bv_pointers_widet solver(ns, satcheck, message_handler);
-  axiomst axioms(solver, address_taken, ns);
+  axiomst axioms(solver, address_taken, verbose, ns);
 
   // check if a => b is valid,
   // or (!a || b) is valid,
@@ -238,7 +241,8 @@ bool is_subsumed(
   switch(solver())
   {
   case decision_proceduret::resultt::D_SATISFIABLE:
-    show_assignment(solver);
+    if(verbose)
+      show_assignment(solver);
     return false;
   case decision_proceduret::resultt::D_UNSATISFIABLE:
     return true;
@@ -259,7 +263,7 @@ std::size_t count_frame(const workt::patht &path, frame_reft f)
 void solver(
   std::vector<framet> &frames,
   const std::unordered_set<symbol_exprt, irep_hash> &address_taken,
-  std::size_t loop_limit,
+  const solver_optionst &solver_options,
   const namespacet &ns,
   std::vector<propertyt> &properties,
   std::size_t property_index)
@@ -267,7 +271,8 @@ void solver(
   const auto frame_map = build_frame_map(frames);
   auto &property = properties[property_index];
 
-  std::cout << "\nDoing " << format(property.condition) << '\n';
+  if(solver_options.verbose)
+    std::cout << "\nDoing " << format(property.condition) << '\n';
 
   for(auto &frame : frames)
     frame.reset();
@@ -284,23 +289,40 @@ void solver(
   std::vector<workt> dropped;
 
   auto propagator =
-    [&frames, &frame_map, &queue, &dropped, &address_taken, loop_limit, &ns](
+    [&frames,
+     &frame_map,
+     &queue,
+     &dropped,
+     &address_taken,
+     &solver_options,
+     &ns](
       const symbol_exprt &symbol, exprt invariant, const workt::patht &path) {
       auto frame_ref = find_frame(frame_map, symbol);
       auto &f = frames[frame_ref.index];
 
-      std::cout << "F: " << format(symbol) << " <- " << format(invariant)
-                << '\n';
+      if(solver_options.verbose)
+      {
+        std::cout << "F: " << format(symbol) << " <- " << format(invariant)
+                  << '\n';
+      }
 
       // check if already subsumed
-      if(is_subsumed(f.invariants, f.auxiliaries, invariant, address_taken, ns))
+      if(is_subsumed(
+           f.invariants,
+           f.auxiliaries,
+           invariant,
+           address_taken,
+           solver_options.verbose,
+           ns))
       {
-        std::cout << "*** SUBSUMED\n";
+        if(solver_options.verbose)
+          std::cout << "*** SUBSUMED\n";
       }
-      else if(count_frame(path, frame_ref) > loop_limit)
+      else if(count_frame(path, frame_ref) > solver_options.loop_limit)
       {
         // loop limit exceeded, drop it
-        std::cout << "*** DROPPED\n";
+        if(solver_options.verbose)
+          std::cout << "*** DROPPED\n";
         dropped.push_back(workt(frame_ref, invariant, path));
       }
       else
@@ -321,16 +343,22 @@ void solver(
 
     frames[work.frame.index].add_invariant(work.invariant);
 
-    dump(frames, property, true, true);
-    std::cout << '\n';
+    if(solver_options.verbose)
+    {
+      dump(frames, property, true, true);
+      std::cout << '\n';
+    }
 
-    if(counterexample_found(frames, work, address_taken, ns))
+    if(counterexample_found(
+         frames, work, address_taken, solver_options.verbose, ns))
     {
       property.status = propertyt::REFUTED;
+      property.path = work.path;
       return;
     }
 
-    propagate(frames, work, address_taken, ns, propagator);
+    propagate(
+      frames, work, address_taken, solver_options.verbose, ns, propagator);
   }
 
   // did we drop anything?
@@ -342,13 +370,16 @@ void solver(
 
 solver_resultt solver(
   const std::vector<exprt> &constraints,
-  std::size_t loop_limit,
+  const solver_optionst &solver_options,
   const namespacet &ns)
 {
   const auto address_taken = ::address_taken(constraints);
 
-  for(auto &a : address_taken)
-    std::cout << "address_taken: " << format(a) << '\n';
+  if(solver_options.verbose)
+  {
+    for(auto &a : address_taken)
+      std::cout << "address_taken: " << format(a) << '\n';
+  }
 
   auto frames = setup_frames(constraints);
 
@@ -364,10 +395,13 @@ solver_resultt solver(
 
   // solve each property separately, in order of occurence
   for(std::size_t i = 0; i < properties.size(); i++)
-    solver(frames, address_taken, loop_limit, ns, properties, i);
+    solver(frames, address_taken, solver_options, ns, properties, i);
 
   // reporting
   report_properties(properties);
+
+  if(solver_options.trace)
+    report_traces(frames, properties, ns);
 
   // overall outcome
   return overall_outcome(properties);

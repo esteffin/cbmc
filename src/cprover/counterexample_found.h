@@ -20,6 +20,7 @@ bool counterexample_found(
   const std::vector<framet> &,
   const workt &,
   const std::unordered_set<symbol_exprt, irep_hash> &address_taken,
+  bool verbose,
   const namespacet &);
 
 class bv_pointers_widet;

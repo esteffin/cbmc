@@ -21,9 +21,15 @@ enum class solver_resultt
   ERROR
 };
 
-solver_resultt solver(
-  const std::vector<exprt> &,
-  const std::size_t loop_limit,
-  const namespacet &);
+class solver_optionst
+{
+public:
+  bool trace;
+  bool verbose;
+  std::size_t loop_limit;
+};
+
+solver_resultt
+solver(const std::vector<exprt> &, const solver_optionst &, const namespacet &);
 
 #endif // CPROVER_CPROVER_SOLVER_H

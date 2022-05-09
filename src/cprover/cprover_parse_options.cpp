@@ -23,6 +23,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <goto-programs/goto_inline.h>
 #include <goto-programs/initialize_goto_model.h>
 #include <goto-programs/loop_ids.h>
+#include <goto-programs/remove_function_pointers.h>
 #include <goto-programs/set_properties.h>
 #include <goto-programs/show_goto_functions.h>
 
@@ -56,6 +57,29 @@ static void show_goto_functions(const goto_modelt &goto_model)
       std::cout << symbol.display_name() << " /* " << symbol.name << " */\n";
       fun->second.body.output(ns, symbol.name, std::cout);
     }
+  }
+}
+
+static void show_functions_with_loops(const goto_modelt &goto_model)
+{
+  // sort alphabetically
+  const auto sorted = goto_model.goto_functions.sorted();
+
+  const namespacet ns(goto_model.symbol_table);
+  for(const auto &fun : sorted)
+  {
+    const symbolt &symbol = ns.lookup(fun->first);
+
+    if(symbol.is_file_local)
+      continue;
+
+    bool has_loop = false;
+    for(auto &instruction : fun->second.body.instructions)
+      if(instruction.is_backwards_goto())
+        has_loop = true;
+
+    if(has_loop)
+      std::cout << symbol.display_name() << '\n';
   }
 }
 
@@ -101,6 +125,10 @@ int cprover_parse_optionst::main()
     optionst options;
     auto goto_model =
       initialize_goto_model(cmdline.args, message_handler, options);
+
+    remove_function_pointers(
+      message_handler, goto_model, cmdline.isset("safety"));
+
     adjust_float_expressions(goto_model);
     instrument_given_invariants(goto_model);
 
@@ -137,6 +165,12 @@ int cprover_parse_optionst::main()
     if(cmdline.isset("show-loops"))
     {
       show_loop_ids(ui_message_handlert::uit::PLAIN, goto_model);
+      return CPROVER_EXIT_SUCCESS;
+    }
+
+    if(cmdline.isset("show-functions-with-loops"))
+    {
+      show_functions_with_loops(goto_model);
       return CPROVER_EXIT_SUCCESS;
     }
 
@@ -183,18 +217,21 @@ int cprover_parse_optionst::main()
         return CPROVER_EXIT_SUCCESS;
     }
 
-    std::size_t loop_limit;
+    solver_optionst solver_options;
 
     if(cmdline.isset("unwind"))
     {
-      loop_limit = std::stoull(cmdline.get_value("unwind"));
+      solver_options.loop_limit = std::stoull(cmdline.get_value("unwind"));
     }
     else
-      loop_limit = 1;
+      solver_options.loop_limit = 1;
+
+    solver_options.trace = cmdline.isset("trace");
+    solver_options.verbose = cmdline.isset("verbose");
 
     // solve
     auto result =
-      state_encoding_solver(goto_model, perform_inlining, loop_limit);
+      state_encoding_solver(goto_model, perform_inlining, solver_options);
 
     switch(result)
     {

@@ -38,8 +38,13 @@ using frame_mapt = std::unordered_map<symbol_exprt, frame_reft, irep_hash>;
 class framet
 {
 public:
-  framet(symbol_exprt _symbol, frame_reft __ref)
-    : symbol(std::move(_symbol)), ref(std::move(__ref))
+  framet(
+    symbol_exprt __symbol,
+    source_locationt __source_location,
+    frame_reft __ref)
+    : symbol(std::move(__symbol)),
+      source_location(std::move(__source_location)),
+      ref(std::move(__ref))
   {
   }
 
@@ -63,6 +68,9 @@ public:
   };
 
   std::vector<implicationt> implications;
+
+  // tracking source code origin
+  source_locationt source_location = source_locationt::nil();
 
   void add_invariant(exprt);
   void add_auxiliary(exprt);
@@ -89,13 +97,21 @@ public:
   {
   }
 
-  // formulas where this frame is on the lhs of ⇒
+  irep_idt property_id() const
+  {
+    return source_location.get_property_id();
+  }
+
   source_locationt source_location;
   frame_reft frame;
   exprt condition;
 
   using statust = enum { UNKNOWN, PASS, REFUTED, ERROR, DROPPED };
   statust status = UNKNOWN;
+
+  // trace information when REFUTED
+  using patht = std::vector<frame_reft>;
+  patht path;
 };
 
 struct workt

@@ -42,6 +42,9 @@ void endianness_mapt::build_little_endian(const typet &src)
   if(!s.has_value())
     return;
 
+  if(src.id() == ID_pointer)
+    s.value() = s.value() * 2;
+
   const std::size_t new_size = map.size() + numeric_cast_v<std::size_t>(*s);
   map.reserve(new_size);
 

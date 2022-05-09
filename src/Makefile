@@ -86,7 +86,8 @@ cbmc.dir: languages solvers.dir goto-symex.dir analyses.dir \
           pointer-analysis.dir goto-programs.dir linking.dir \
           goto-instrument.dir goto-checker.dir
 
-cprover.dir: cbmc.dir
+cprover.dir: ansi-c.dir langapi.dir solvers.dir goto-programs.dir \
+             linking.dir analyses.dir
 
 goto-analyzer.dir: languages analyses.dir goto-programs.dir linking.dir \
                    goto-instrument.dir goto-checker.dir
