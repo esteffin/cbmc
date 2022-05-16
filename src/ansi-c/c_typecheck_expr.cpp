@@ -2508,6 +2508,22 @@ exprt c_typecheck_baset::do_special_functions(
 
     return live_object_expr;
   }
+  else if(identifier == CPROVER_PREFIX "WRITEABLE_OBJECT")
+  {
+    if(expr.arguments().size() != 1)
+    {
+      error().source_location = f_op.source_location();
+      error() << "writeable_object expects one argument" << eom;
+      throw 0;
+    }
+
+    typecheck_function_call_arguments(expr);
+
+    exprt writeable_object_expr = writeable_object_exprt(expr.arguments()[0]);
+    writeable_object_expr.add_source_location() = source_location;
+
+    return writeable_object_expr;
+  }
   else if(identifier==CPROVER_PREFIX "POINTER_OFFSET")
   {
     if(expr.arguments().size()!=1)
