@@ -167,6 +167,13 @@ exprt state_encodingt::replace_nondet_rec(
       nondet_symbols.push_back(symbol);
       return std::move(symbol);
     }
+    else if(statement == ID_va_start)
+    {
+      irep_idt identifier =
+        "va_start::" + state_prefix + std::to_string(loc->location_number);
+      auto symbol = symbol_exprt(identifier, side_effect.type());
+      return std::move(symbol);
+    }
     else
       return what; // leave it
   }

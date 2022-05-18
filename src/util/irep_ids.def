@@ -879,6 +879,14 @@ IREP_ID_ONE(allocate_state)
 IREP_ID_ONE(reallocate_state)
 IREP_ID_ONE(deallocate_state)
 IREP_ID_ONE(update_state)
+IREP_ID_ONE(state_r_ok)
+IREP_ID_ONE(state_w_ok)
+IREP_ID_ONE(state_rw_ok)
+IREP_ID_ONE(state_is_cstring)
+IREP_ID_ONE(state_is_dynamic_object)
+IREP_ID_ONE(state_live_object)
+IREP_ID_ONE(state_writeable_object)
+IREP_ID_ONE(state_object_size)
 
 // Projects depending on this code base that wish to extend the list of
 // available ids should provide a file local_irep_ids.def in their source tree

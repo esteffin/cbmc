@@ -12,15 +12,6 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/mathematical_expr.h>
 #include <util/pointer_expr.h>
 
-extern const irep_idt ID_state_is_cstring;
-extern const irep_idt ID_state_is_dynamic_object;
-extern const irep_idt ID_state_live_object;
-extern const irep_idt ID_state_writeable_object;
-extern const irep_idt ID_state_object_size;
-extern const irep_idt ID_state_r_ok;
-extern const irep_idt ID_state_w_ok;
-extern const irep_idt ID_state_rw_ok;
-
 class state_typet : public typet
 {
 public:
