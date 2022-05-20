@@ -304,6 +304,43 @@ void c_safety_checks(
             dest.add(goto_programt::make_assertion(condition, source_location));
           }
         }
+        else if(identifier == "memcmp")
+        {
+          if(
+            it->call_arguments().size() == 3 &&
+            it->call_arguments()[0].type().id() == ID_pointer &&
+            it->call_arguments()[1].type().id() == ID_pointer &&
+            it->call_arguments()[2].type().id() == ID_unsignedbv)
+          {
+            // int memcmp(const void *s1, const void *s2, size_t n);
+            const auto &p1 = it->call_arguments()[0];
+            const auto &p2 = it->call_arguments()[1];
+            const auto &size = it->call_arguments()[2];
+            auto condition =
+              and_exprt(r_ok_exprt(p1, size), r_ok_exprt(p2, size));
+            auto source_location = it->source_location();
+            source_location.set_property_class("memcmp");
+            source_location.set_comment("memcmp regions must be valid");
+            dest.add(goto_programt::make_assertion(condition, source_location));
+          }
+        }
+        else if(identifier == "memset")
+        {
+          if(
+            it->call_arguments().size() == 3 &&
+            it->call_arguments()[0].type().id() == ID_pointer &&
+            it->call_arguments()[2].type().id() == ID_unsignedbv)
+          {
+            // void *memset(void *b, int c, size_t len);
+            const auto &pointer = it->call_arguments()[0];
+            const auto &size = it->call_arguments()[2];
+            auto condition = w_ok_exprt(pointer, size);
+            auto source_location = it->source_location();
+            source_location.set_property_class("memset");
+            source_location.set_comment("memset destination must be valid");
+            dest.add(goto_programt::make_assertion(condition, source_location));
+          }
+        }
       }
     }
 
