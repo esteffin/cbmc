@@ -28,6 +28,8 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <goto-programs/show_goto_functions.h>
 
 #include <ansi-c/ansi_c_language.h>
+#include <ansi-c/gcc_version.h>
+
 #include <langapi/mode.h>
 
 #include "c_safety_checks.h"
@@ -117,9 +119,16 @@ int cprover_parse_optionst::main()
       return CPROVER_EXIT_INCORRECT_TASK;
     }
 
-    bool perform_inlining = !cmdline.isset("no-inline");
-
     config.set(cmdline);
+
+    // configure gcc, if required
+    if(config.ansi_c.preprocessor == configt::ansi_ct::preprocessort::GCC)
+    {
+      gcc_versiont gcc_version;
+      gcc_version.get("gcc");
+      configure_gcc(gcc_version);
+    }
+
     console_message_handlert message_handler;
 
     optionst options;
@@ -131,6 +140,8 @@ int cprover_parse_optionst::main()
 
     adjust_float_expressions(goto_model);
     instrument_given_invariants(goto_model);
+
+    bool perform_inlining = !cmdline.isset("no-inline");
 
     if(!perform_inlining)
       instrument_contracts(goto_model);
