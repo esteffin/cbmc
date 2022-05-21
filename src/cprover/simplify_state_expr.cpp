@@ -213,9 +213,9 @@ exprt simplify_object_expression(exprt src)
   return simplify_object_expression_rec(src);
 }
 
-exprt simplify_live_object_expr(binary_exprt src, const namespacet &ns)
+exprt simplify_live_object_expr(state_live_object_exprt src, const namespacet &ns)
 {
-  const auto &pointer = src.op1();
+  const auto &pointer = src.address();
 
   auto object = simplify_object_expression(pointer);
 
@@ -243,10 +243,12 @@ exprt simplify_live_object_expr(binary_exprt src, const namespacet &ns)
 
   // A store does not affect the result.
   // live_object(ς[A:=V]), p) --> live_object(ς, p)
-  if(src.op0().id() == ID_update_state)
+  if(src.state().id() == ID_update_state)
   {
-    src.op0() = to_update_state_expr(src.op0()).state();
-    return std::move(src);
+    src.state() = to_update_state_expr(src.state()).state();
+
+    // rec. call
+    return simplify_live_object_expr(std::move(src), ns);
   }
 
   return std::move(src);
@@ -302,7 +304,8 @@ exprt simplify_is_dynamic_object_expr(state_is_dynamic_object_exprt src)
   if(src.state().id() == ID_update_state)
   {
     src.state() = to_update_state_expr(src.state()).state();
-    return std::move(src);
+    // rec. call
+    return simplify_is_dynamic_object_expr(std::move(src));
   }
 
   return std::move(src);
@@ -374,7 +377,9 @@ exprt simplify_ok_expr(
     // A store does not affect the result.
     // X_ok(ς[A:=V]), A, S) --> X_ok(ς, A, S)
     state = to_update_state_expr(state).state();
-    return std::move(src);
+
+    // rec. call
+    return simplify_state_expr_node(std::move(src), address_taken, ns);
   }
 
   return std::move(src);
