@@ -162,7 +162,8 @@ void c_safety_checks_rec(
     else
     {
       auto zero = from_integer(0, div_expr.type());
-      auto condition = notequal_exprt(div_expr.divisor(), zero);
+      auto condition = implies_exprt(
+        conjunction(guards), notequal_exprt(div_expr.divisor(), zero));
       auto source_location = expr.source_location();
       condition.add_source_location() = expr.source_location();
       source_location.set_property_class("division-by-zero");
