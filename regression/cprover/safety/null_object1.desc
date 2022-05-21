@@ -3,5 +3,5 @@ null_object1.c
 --safety
 ^EXIT=10$
 ^SIGNAL=0$
-^\[main\.pointer\.1\] line \d+ pointer safe: REFUTED$
+^\[main\.pointer\.1\] line \d+ pointer p safe: REFUTED$
 --

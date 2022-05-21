@@ -145,7 +145,8 @@ void c_safety_checks_rec(
         auto source_location = expr.source_location();
         condition.add_source_location() = expr.source_location();
         source_location.set_property_class("pointer");
-        source_location.set_comment("pointer safe");
+        auto pointer_text = expr2c(pointer, ns);
+        source_location.set_comment("pointer " + pointer_text + " safe");
         dest.add(goto_programt::make_assertion(condition, source_location));
       }
     }

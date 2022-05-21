@@ -3,5 +3,5 @@ call8.c
 --safety
 ^EXIT=10$
 ^SIGNAL=0$
-^\[my_function\.pointer\.1\] line \d+ pointer safe: REFUTED$
+^\[my_function\.pointer\.1\] line \d+ pointer p safe: REFUTED$
 --

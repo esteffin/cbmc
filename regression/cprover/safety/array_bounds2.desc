@@ -3,7 +3,7 @@ array_bounds2.c
 --safety
 ^EXIT=10$
 ^SIGNAL=0$
-^\[main\.pointer\.1\] line \d+ pointer safe: SUCCESS$
-^\[main\.pointer\.2\] line \d+ pointer safe: REFUTED$
-^\[main\.pointer\.3\] line \d+ pointer safe: REFUTED$
+^\[main\.pointer\.1\] line \d+ pointer .* safe: SUCCESS$
+^\[main\.pointer\.2\] line \d+ pointer .* safe: REFUTED$
+^\[main\.pointer\.3\] line \d+ pointer .* safe: REFUTED$
 --

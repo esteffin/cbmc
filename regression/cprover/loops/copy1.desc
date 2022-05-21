@@ -8,7 +8,7 @@ copy1.c
 ^\[main\.invariant\.3\] line \d+ loop invariant: SUCCESS$
 ^\[main\.invariant\.4\] line \d+ loop invariant: SUCCESS$
 ^\[main\.invariant\.5\] line \d+ loop invariant: SUCCESS$
-^\[main\.pointer\.1\] line \d+ pointer safe: SUCCESS$
-^\[main\.pointer\.2\] line \d+ pointer safe: SUCCESS$
+^\[main\.pointer\.1\] line \d+ pointer output \+ .*i safe: SUCCESS$
+^\[main\.pointer\.2\] line \d+ pointer input \+ .*i safe: SUCCESS$
 --
 --
