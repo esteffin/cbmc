@@ -47,6 +47,7 @@ void propagate(
     auto simplified1a = simplify_state_expr(simplified1, address_taken, ns);
     if(simplified1 != simplified1a)
     {
+      std::cout << "SIMP0: " << format(instance) << "\n";
       std::cout << "SIMP1: " << format(simplified1) << "\n";
       std::cout << "SIMPa: " << format(simplified1a) << "\n";
       abort();

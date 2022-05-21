@@ -1,9 +1,10 @@
-KNOWNBUG
+CORE
 struct3.c
---text
+--text --solve
 ^EXIT=0$
 ^SIGNAL=0$
-^program is safe / function main is safe / line .* property 1: SUCCESS$
-^program is safe / function main is safe / line .* property 2: SUCCESS$
-^program is safe / function main is safe / line .* property 3: SUCCESS$
+^\(\d+\) ∀ ς : state \. S\d+\(ς\) ⇒ S\d+\(ς\[❝b❞\.❝x❞:=ς\(❝a❞\.❝x❞\)\]\[❝b❞\.❝y❞:=ς\(❝a❞\.❝y❞\)\]\)$
+^\[main\.assertion\.1\] line \d+ property 1: SUCCESS$
+^\[main\.assertion\.2\] line \d+ property 2: SUCCESS$
+^\[main\.assertion\.3\] line \d+ property 3: SUCCESS$
 --

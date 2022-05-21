@@ -13,6 +13,7 @@ Author:
 #include <util/mathematical_expr.h>
 #include <util/pointer_expr.h>
 #include <util/prefix.h>
+#include <util/simplify_expr.h>
 #include <util/std_code.h>
 
 #include <goto-programs/goto_model.h>
@@ -28,8 +29,8 @@ Author:
 class state_encodingt
 {
 public:
-  explicit state_encodingt(const goto_functionst &__goto_functions)
-    : goto_functions(__goto_functions)
+  explicit state_encodingt(const goto_modelt &__goto_model)
+    : goto_model(__goto_model)
   {
   }
 
@@ -47,7 +48,7 @@ public:
 
 protected:
   using loct = goto_programt::const_targett;
-  const goto_functionst &goto_functions;
+  const goto_modelt &goto_model;
 
   symbol_exprt out_state_expr(loct) const;
   symbol_exprt state_expr_with_suffix(loct, const std::string &suffix) const;
@@ -71,6 +72,8 @@ protected:
   exprt forall_states_expr(loct, exprt, exprt) const;
   void setup_incoming(const goto_functiont &);
   exprt assignment_constraint(loct, exprt lhs, exprt rhs) const;
+  exprt
+  assignment_constraint_rec(loct, exprt state, exprt lhs, exprt rhs) const;
   void function_call(goto_programt::const_targett, encoding_targett &);
   void function_call_symbol(goto_programt::const_targett, encoding_targett &);
 
@@ -337,6 +340,8 @@ exprt state_encodingt::address_rec(loct loc, const exprt &state, exprt expr)
     auto compound_address = address_rec(loc, state, std::move(compound));
     auto component_name = to_member_expr(expr).get_component_name();
 
+    CHECK_RETURN(compound_address.type().id() == ID_pointer);
+
     if(expr.type().id() == ID_array)
     {
       const auto &element_type = to_array_type(expr.type()).element_type();
@@ -378,6 +383,12 @@ exprt state_encodingt::address_rec(loct loc, const exprt &state, exprt expr)
     throw incorrect_goto_program_exceptiont(
       "can't do array literals", expr.source_location());
   }
+  else if(expr.id() == ID_struct)
+  {
+    // TBD.
+    throw incorrect_goto_program_exceptiont(
+      "can't do struct literals", expr.source_location());
+  }
   else if(expr.id() == ID_union)
   {
     // TBD.
@@ -385,22 +396,57 @@ exprt state_encodingt::address_rec(loct loc, const exprt &state, exprt expr)
       "can't do union literals", expr.source_location());
   }
   else
-    return nil_exprt();
+  {
+    // address of something we don't know
+    throw incorrect_goto_program_exceptiont(
+      "address of unknown object " + expr.id_string(), expr.source_location());
+  }
+}
+
+exprt state_encodingt::assignment_constraint_rec(
+  loct loc,
+  exprt state,
+  exprt lhs,
+  exprt rhs) const
+{
+  if(lhs.type().id() == ID_struct_tag)
+  {
+    // split up into fields, recursively
+    const namespacet ns(goto_model.symbol_table);
+    const auto &struct_type = ns.follow_tag(to_struct_tag_type(lhs.type()));
+    exprt new_state = state;
+    for(auto &field : struct_type.components())
+    {
+      exprt lhs_member = member_exprt(lhs, field.get_name(), field.type());
+      exprt rhs_member = member_exprt(rhs, field.get_name(), field.type());
+
+      if(rhs.id() == ID_struct)
+        rhs_member = simplify_expr(rhs_member, ns);
+
+      new_state =
+        assignment_constraint_rec(loc, new_state, lhs_member, rhs_member);
+    }
+
+    return new_state;
+  }
+  else
+  {
+    auto s = state_expr();
+    auto address = address_rec(loc, s, lhs);
+
+    exprt rhs_evaluated = evaluate_expr(loc, s, rhs);
+
+    std::vector<symbol_exprt> nondet_symbols;
+    exprt new_value = replace_nondet_rec(loc, rhs_evaluated, nondet_symbols);
+
+    return update_state_exprt(state, address, new_value);
+  }
 }
 
 exprt state_encodingt::assignment_constraint(loct loc, exprt lhs, exprt rhs)
   const
 {
-  auto s = state_expr();
-
-  auto address = address_rec(loc, s, lhs);
-
-  exprt rhs_evaluated = evaluate_expr(loc, s, rhs);
-
-  std::vector<symbol_exprt> nondet_symbols;
-  exprt new_value = replace_nondet_rec(loc, rhs_evaluated, nondet_symbols);
-
-  auto new_state = update_state_exprt(s, address, new_value);
+  auto new_state = assignment_constraint_rec(loc, state_expr(), lhs, rhs);
 
   return forall_states_expr(
     loc, function_application_exprt(out_state_expr(loc), {new_state}));
@@ -506,8 +552,8 @@ void state_encodingt::function_call_symbol(
   }
 
   // Find the function
-  auto f = goto_functions.function_map.find(identifier);
-  if(f == goto_functions.function_map.end())
+  auto f = goto_model.goto_functions.function_map.find(identifier);
+  if(f == goto_model.goto_functions.function_map.end())
     DATA_INVARIANT(false, "failed find function in function_map");
 
   // Do we have a function body?
@@ -548,7 +594,7 @@ void state_encodingt::function_call_symbol(
       loc, function_application_exprt(function_entry_state, {arguments_state}));
 
     // now do the body, recursively
-    state_encodingt body_state_encoding(goto_functions);
+    state_encodingt body_state_encoding(goto_model);
     auto new_state_prefix =
       state_prefix + std::to_string(loc->location_number) + ".";
     body_state_encoding.encode(
@@ -661,12 +707,9 @@ void state_encodingt::encode(
       auto &lhs = loc->assign_lhs();
       auto &rhs = loc->assign_rhs();
 
+      DATA_INVARIANT(lhs.type() == rhs.type(), "assignment type consistency");
+
       if(lhs.type().id() == ID_array)
-      {
-        // skip
-        dest << equal_exprt(out_state_expr(loc), in_state_expr(loc));
-      }
-      else if(lhs.type().id() == ID_struct_tag)
       {
         // skip
         dest << equal_exprt(out_state_expr(loc), in_state_expr(loc));
@@ -774,7 +817,7 @@ void state_encoding(
 
     dest.annotation("function " + id2string(f_entry->first));
 
-    state_encodingt{goto_model.goto_functions}(f_entry, dest);
+    state_encodingt{goto_model}(f_entry, dest);
   }
   else
   {
@@ -790,7 +833,7 @@ void state_encoding(
       {
         dest.annotation("");
         dest.annotation("function " + id2string(f->first));
-        state_encodingt{goto_model.goto_functions}(f, dest);
+        state_encodingt{goto_model}(f, dest);
       }
     }
   }

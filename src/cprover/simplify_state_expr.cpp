@@ -65,7 +65,9 @@ exprt simplify_evaluate_update(
       // (ς[❝x❞:=V])(❝y❞) --> ς(❝y❞)
       auto new_evaluate_expr = evaluate_expr;
       new_evaluate_expr.state() = update_state_expr.state();
-      return std::move(new_evaluate_expr);
+      // It might be possible to further simplify ς(❝y❞)
+      return simplify_state_expr_node(
+        std::move(new_evaluate_expr), address_taken, ns);
     }
     else
     {
@@ -81,19 +83,58 @@ exprt simplify_evaluate_update(
     }
   }
 
-  // Complex case.
-  auto same_object =
-    ::same_object(evaluate_expr.address(), update_state_expr.address());
-  auto object = update_state_expr.new_value();
-  auto offset = simplify_state_expr_node(
-    pointer_offset(evaluate_expr.address()), address_taken, ns);
-  auto byte_extract = make_byte_extract(object, offset, evaluate_expr.type());
   auto new_evaluate_expr = evaluate_expr;
   new_evaluate_expr.state() = update_state_expr.state();
-  return if_exprt(
-    std::move(same_object),
-    std::move(byte_extract),
-    std::move(new_evaluate_expr));
+  auto simplified_new_evaluate_expr =
+    simplify_state_expr(new_evaluate_expr, address_taken, ns); // rec. call
+
+  // Types match?
+  if(update_state_expr.new_value().type() == evaluate_expr.type())
+  {
+    // Disregard case where the two memory regions overlap.
+    //
+    // (ς[w:=v])(r) -->
+    //   IF same_object(w, r) ∧ offset(w) = offset(r) THEN
+    //     v
+    //   ELSE
+    //     ς(r)
+    //   ENDIF
+    auto same_object =
+      ::same_object(evaluate_expr.address(), update_state_expr.address());
+
+    auto same_offset = equal_exprt(
+      pointer_offset(evaluate_expr.address()),
+      pointer_offset(update_state_expr.address()));
+
+    auto same = and_exprt(same_object, same_offset);
+
+    auto simplified_same =
+      simplify_expr(simplify_state_expr(same, address_taken, ns), ns);
+
+    return if_exprt(
+      simplified_same,
+      update_state_expr.new_value(),
+      simplified_new_evaluate_expr);
+  }
+  else
+  {
+    // Complex case. Types don't match.
+    return simplified_new_evaluate_expr;
+
+#if 0
+    auto object = update_state_expr.new_value();
+
+    auto offset = simplify_state_expr_node(
+      pointer_offset(evaluate_expr.address()), address_taken, ns);
+
+    auto byte_extract = make_byte_extract(object, offset, evaluate_expr.type());
+
+    return if_exprt(
+      std::move(simplified_same_object),
+      std::move(byte_extract),
+      std::move(simplified_new_evaluate_expr));
+#endif
+  }
 }
 
 exprt simplify_evaluate_allocate_state(
@@ -388,10 +429,13 @@ exprt simplify_is_cstring_expr(
     if(update_state_expr.new_value().is_zero())
     {
       // cstring(s[p:=0], q) --> if p alias q then true else cstring(s, q)
+      auto same_object = ::same_object(pointer, update_state_expr.address());
+
+      auto simplified_same_object =
+        simplify_expr(simplify_state_expr(same_object, address_taken, ns), ns);
+
       return if_exprt(
-        same_object(pointer, update_state_expr.address()),
-        true_exprt(),
-        simplified_cstring_in_old_state);
+        simplified_same_object, true_exprt(), simplified_cstring_in_old_state);
     }
   }
 
@@ -524,6 +568,25 @@ exprt simplify_state_expr_node(
           return std::move(product);
         }
       }
+    }
+  }
+  else if(src.id() == ID_pointer_object)
+  {
+    auto &pointer_object_expr = to_pointer_object_expr(src);
+
+    if(pointer_object_expr.pointer().id() == ID_element_address)
+    {
+      const auto &element_address_expr =
+        to_element_address_expr(pointer_object_expr.pointer());
+      // pointer_object(element_address(p, y)) -> pointer_object(p)
+      return pointer_object_exprt(element_address_expr.base(), src.type());
+    }
+    else if(pointer_object_expr.pointer().id() == ID_field_address)
+    {
+      const auto &field_address_expr =
+        to_field_address_expr(pointer_object_expr.pointer());
+      // pointer_object(p.❝y❞) -> pointer_object(p)
+      return pointer_object_exprt(field_address_expr.base(), src.type());
     }
   }
   else if(src.id() == ID_state_object_size)
