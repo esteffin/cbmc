@@ -9,7 +9,7 @@ assume1.c
 ^\(\d+\) ∀ ς : state \. \(S20\(ς\) ∧ ς\(❝main::1::x❞\) ≥ 10\) ⇒ S21\(ς\)$
 ^\(\d+\) ∀ ς : state \. S21\(ς\) ⇒ \(ς\(❝main::1::x❞\) ≥ 5\)$
 ^\(\d+\) ∀ ς : state \. S22\(ς\) ⇒ \(ς\(❝main::1::x❞\) ≥ 15\)$
-^\(\d+\) ∀ ς : state \. S24\(ς\) ⇒ S25\(ς\[❝return'❞:=nondet::S25\]\)$
+^\(\d+\) ∀ ς : state \. S24\(ς\) ⇒ S25\(ς\[❝return'❞:=nondet::S25-0\]\)$
 ^\[main\.assertion\.1\] line \d+ property 1: SUCCESS$
 ^\[main\.assertion\.2\] line \d+ property 2: REFUTED$
 --

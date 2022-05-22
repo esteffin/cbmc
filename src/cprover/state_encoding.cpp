@@ -72,8 +72,12 @@ protected:
   exprt forall_states_expr(loct, exprt, exprt) const;
   void setup_incoming(const goto_functiont &);
   exprt assignment_constraint(loct, exprt lhs, exprt rhs) const;
-  exprt
-  assignment_constraint_rec(loct, exprt state, exprt lhs, exprt rhs) const;
+  exprt assignment_constraint_rec(
+    loct,
+    exprt state,
+    exprt lhs,
+    exprt rhs,
+    std::vector<symbol_exprt> &nondet_symbols) const;
   void function_call(goto_programt::const_targett, encoding_targett &);
   void function_call_symbol(goto_programt::const_targett, encoding_targett &);
 
@@ -164,8 +168,9 @@ exprt state_encodingt::replace_nondet_rec(
     auto statement = side_effect.get_statement();
     if(statement == ID_nondet)
     {
-      irep_idt identifier =
-        "nondet::" + state_prefix + std::to_string(loc->location_number);
+      irep_idt identifier = "nondet::" + state_prefix +
+                            std::to_string(loc->location_number) + "-" +
+                            std::to_string(nondet_symbols.size());
       auto symbol = symbol_exprt(identifier, side_effect.type());
       nondet_symbols.push_back(symbol);
       return std::move(symbol);
@@ -407,7 +412,8 @@ exprt state_encodingt::assignment_constraint_rec(
   loct loc,
   exprt state,
   exprt lhs,
-  exprt rhs) const
+  exprt rhs,
+  std::vector<symbol_exprt> &nondet_symbols) const
 {
   if(lhs.type().id() == ID_struct_tag)
   {
@@ -423,8 +429,8 @@ exprt state_encodingt::assignment_constraint_rec(
       if(rhs.id() == ID_struct)
         rhs_member = simplify_expr(rhs_member, ns);
 
-      new_state =
-        assignment_constraint_rec(loc, new_state, lhs_member, rhs_member);
+      new_state = assignment_constraint_rec(
+        loc, new_state, lhs_member, rhs_member, nondet_symbols);
     }
 
     return new_state;
@@ -436,7 +442,6 @@ exprt state_encodingt::assignment_constraint_rec(
 
     exprt rhs_evaluated = evaluate_expr(loc, s, rhs);
 
-    std::vector<symbol_exprt> nondet_symbols;
     exprt new_value = replace_nondet_rec(loc, rhs_evaluated, nondet_symbols);
 
     return update_state_exprt(state, address, new_value);
@@ -446,7 +451,10 @@ exprt state_encodingt::assignment_constraint_rec(
 exprt state_encodingt::assignment_constraint(loct loc, exprt lhs, exprt rhs)
   const
 {
-  auto new_state = assignment_constraint_rec(loc, state_expr(), lhs, rhs);
+  std::vector<symbol_exprt> nondet_symbols;
+
+  auto new_state =
+    assignment_constraint_rec(loc, state_expr(), lhs, rhs, nondet_symbols);
 
   return forall_states_expr(
     loc, function_application_exprt(out_state_expr(loc), {new_state}));
