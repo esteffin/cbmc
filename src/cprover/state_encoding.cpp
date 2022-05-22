@@ -525,6 +525,22 @@ void state_encodingt::function_call_symbol(
     return;
   }
 
+  // malloc is special-cased
+  if(identifier == "posix_memalign")
+  {
+    // int posix_memalign(void **memptr, size_t alignment, size_t size);
+    auto state = state_expr();
+    PRECONDITION(loc->call_arguments().size() == 3);
+    auto memptr_evaluated = evaluate_expr(loc, state, loc->call_arguments()[0]);
+    auto size_evaluated = evaluate_expr(loc, state, loc->call_arguments()[2]);
+    auto lhs_type = pointer_type(empty_typet());
+    exprt new_state = update_state_exprt(
+      state, memptr_evaluated, allocate_exprt(state, size_evaluated, lhs_type));
+    dest << forall_states_expr(
+      loc, function_application_exprt(out_state_expr(loc), {new_state}));
+    return;
+  }
+
   // realloc is special-cased
   if(identifier == "realloc")
   {
