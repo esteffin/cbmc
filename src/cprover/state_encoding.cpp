@@ -400,6 +400,14 @@ exprt state_encodingt::address_rec(loct loc, const exprt &state, exprt expr)
     throw incorrect_goto_program_exceptiont(
       "can't do union literals", expr.source_location());
   }
+  else if(expr.id() == ID_side_effect)
+  {
+    // Should have been removed elsewhere.
+    throw incorrect_goto_program_exceptiont(
+      "address of side effect " +
+        id2string(to_side_effect_expr(expr).get_statement()),
+      expr.source_location());
+  }
   else
   {
     // address of something we don't know
