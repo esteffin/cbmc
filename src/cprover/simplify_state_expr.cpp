@@ -137,6 +137,21 @@ exprt simplify_evaluate_update(
   }
 }
 
+exprt simplify_allocate(allocate_exprt src)
+{
+  // A store does not affect the result.
+  // allocate(ς[A:=V]), size) --> allocate(ς, size)
+  if(src.state().id() == ID_update_state)
+  {
+    src.state() = to_update_state_expr(src.state()).state();
+
+    // rec. call
+    return simplify_allocate(std::move(src));
+  }
+
+  return std::move(src);
+}
+
 exprt simplify_evaluate_allocate_state(
   evaluate_exprt evaluate_expr,
   const namespacet &ns)
@@ -487,7 +502,11 @@ exprt simplify_state_expr_node(
   const std::unordered_set<symbol_exprt, irep_hash> &address_taken,
   const namespacet &ns)
 {
-  if(src.id() == ID_evaluate)
+  if(src.id() == ID_allocate)
+  {
+    return simplify_allocate(to_allocate_expr(src));
+  }
+  else if(src.id() == ID_evaluate)
   {
     auto &evaluate_expr = to_evaluate_expr(src);
 
