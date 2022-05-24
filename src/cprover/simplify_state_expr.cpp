@@ -579,18 +579,19 @@ exprt simplify_state_expr_node(
     {
       const auto &element_address_expr =
         to_element_address_expr(pointer_offset_expr.pointer());
-      if(element_address_expr.base().id() == ID_object_address)
+      // pointer_offset(element_address(Z, y)) -->
+      //   pointer_offset(Z) + y*sizeof(x)
+      auto size_opt = size_of_expr(element_address_expr.element_type(), ns);
+      if(size_opt.has_value())
       {
-        // pointer_offset(element_address(❝x❞, y)) -> y*sizeof(x)
-        auto size_opt = size_of_expr(element_address_expr.element_type(), ns);
-        if(size_opt.has_value())
-        {
-          auto product = mult_exprt(
-            typecast_exprt::conditional_cast(
-              element_address_expr.index(), src.type()),
-            typecast_exprt::conditional_cast(*size_opt, src.type()));
-          return std::move(product);
-        }
+        auto product = mult_exprt(
+          typecast_exprt::conditional_cast(
+            element_address_expr.index(), src.type()),
+          typecast_exprt::conditional_cast(*size_opt, src.type()));
+        auto pointer_offset = pointer_offset_exprt(
+          element_address_expr.base(), pointer_offset_expr.type());
+        auto sum = plus_exprt(pointer_offset, std::move(product));
+        return std::move(sum);
       }
     }
   }
