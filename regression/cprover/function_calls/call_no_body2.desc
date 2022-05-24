@@ -1,0 +1,6 @@
+KNOWNBUG
+call_no_body2.c
+--text
+^EXIT=0$
+^SIGNAL=0$
+--

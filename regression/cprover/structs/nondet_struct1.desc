@@ -1,0 +1,6 @@
+KNOWNBUG
+nondet_struct1.c
+--text
+^EXIT=0$
+^SIGNAL=0$
+--
