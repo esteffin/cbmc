@@ -8,4 +8,5 @@ struct S nondet_S();
 int main()
 {
   s = nondet_S();
+  return 0;
 }

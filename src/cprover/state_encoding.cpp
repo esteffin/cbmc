@@ -292,6 +292,11 @@ exprt state_encodingt::evaluate_expr_rec(
       evaluate_expr_rec(loc, state, is_cstring_expr.op(), bound_symbols);
     return binary_predicate_exprt(state, ID_state_is_cstring, pointer);
   }
+  else if(what.id() == ID_side_effect)
+  {
+    // leave as is
+    return what;
+  }
   else
   {
     exprt tmp = what;
@@ -436,6 +441,13 @@ exprt state_encodingt::assignment_constraint_rec(
 
       if(rhs.id() == ID_struct)
         rhs_member = simplify_expr(rhs_member, ns);
+      else if(
+        rhs.id() == ID_side_effect &&
+        to_side_effect_expr(rhs).get_statement() == ID_nondet)
+      {
+        rhs_member =
+          side_effect_expr_nondett(rhs_member.type(), rhs.source_location());
+      }
 
       new_state = assignment_constraint_rec(
         loc, new_state, lhs_member, rhs_member, nondet_symbols);

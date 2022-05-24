@@ -1,6 +1,7 @@
-KNOWNBUG
+CORE
 call_no_body2.c
 --text
 ^EXIT=0$
 ^SIGNAL=0$
+^\(\d+\) ∀ ς : state \. S21\(ς\) ⇒ S22\(ς\[❝main::\$tmp::return_value_function_without_body❞\.❝x❞:=nondet::S22-0\]\)$
 --

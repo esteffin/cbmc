@@ -1,6 +1,7 @@
-KNOWNBUG
+CORE
 nondet_struct1.c
 --text
 ^EXIT=0$
 ^SIGNAL=0$
+^\(\d+\) ∀ ς : state \. S20\(ς\) ⇒ S21\(ς\[❝s❞\.❝x❞:=nondet::S21-0\]\[❝s❞\.❝y❞:=nondet::S21-1\]\)$
 --
