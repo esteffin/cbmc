@@ -594,6 +594,13 @@ exprt simplify_state_expr_node(
         return std::move(sum);
       }
     }
+    else if(pointer_offset_expr.pointer().id() == ID_address_of)
+    {
+      const auto &address_of_expr =
+        to_address_of_expr(pointer_offset_expr.pointer());
+      if(address_of_expr.object().id() == ID_string_constant)
+        return from_integer(0, pointer_offset_expr.type());
+    }
   }
   else if(src.id() == ID_pointer_object)
   {
