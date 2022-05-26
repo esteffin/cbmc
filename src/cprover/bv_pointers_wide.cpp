@@ -143,7 +143,7 @@ literalt bv_pointers_widet::convert_rest(const exprt &expr)
           offset_bv0,
           expr.id(),
           offset_bv1,
-          bv_utilst::representationt::SIGNED));
+          bv_utilst::representationt::UNSIGNED)); // Note the UNSIGNED comparison
     }
   }
 
