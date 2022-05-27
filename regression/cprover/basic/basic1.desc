@@ -1,6 +1,6 @@
 CORE
 basic1.c
---text --solve
+--text --solve --inline
 ^EXIT=0$
 ^SIGNAL=0$
 ^ \(\d+\) ∀ ς : state \. true ⇒ SInitial\(ς\)$

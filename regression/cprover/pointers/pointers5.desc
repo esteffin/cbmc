@@ -1,6 +1,6 @@
 CORE
 pointers5.c
---text --solve
+--text --solve --inline
 ^EXIT=0$
 ^SIGNAL=0$
 ^\(\d+\) ∀ ς : state \. \(S22\(ς\) ∧ ς\(❝main::1::p❞\) = ς\(❝main::1::q❞\)\) ⇒ S23\(ς\)$

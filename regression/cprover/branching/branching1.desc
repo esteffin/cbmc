@@ -1,6 +1,6 @@
 CORE
 branching1.c
---text --solve
+--text --solve --inline
 ^EXIT=10$
 ^SIGNAL=0$
 ^\(\d+\) ∀ ς : state \. \(S20\(ς\) ∧ ¬\(ς\(❝main::1::x❞\) ≥ 5\)\) ⇒ S21T\(\ς\)$

@@ -1,6 +1,6 @@
 CORE
 basic-float1.c
---text --solve
+--text --solve --inline
 ^EXIT=0$
 ^SIGNAL=0$
 ^\(\d+\) ∀ ς : state \. S20\(ς\) ⇒ S21\(ς\[❝main::1::f❞:=floatbv_typecast\(1, floatbv\[32\], ς\(❝__CPROVER_rounding_mode❞\)\)\]\)$

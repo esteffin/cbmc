@@ -1,6 +1,6 @@
 CORE
 pointers7.c
---text --solve
+--text --solve --inline
 ^EXIT=0$
 ^SIGNAL=0$
 ^\(\d+\) ∀ ς : state \. S17\(ς\) ⇒ S18\(ς\[❝p❞:=NULL\]\)$

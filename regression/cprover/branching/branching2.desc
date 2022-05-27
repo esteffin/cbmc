@@ -1,6 +1,6 @@
 CORE
 branching2.c
---text --solve
+--text --solve --inline
 ^EXIT=10$
 ^SIGNAL=0$
 ^\(\d+\) ∀ ς : state \. \(S21\(ς\) ∧ ¬\(ς\(❝main::1::a❞\) ≥ 5\)\) ⇒ S22T\(ς\)$

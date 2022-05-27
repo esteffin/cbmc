@@ -1,6 +1,6 @@
 CORE
 array2.c
---text --solve
+--text --solve --inline
 ^EXIT=10$
 ^SIGNAL=0$
 ^\(\d+\) ∀ ς : state \. \(S23\(ς\) ∧ ς\(❝main::1::i❞\) = ς\(❝main::1::j❞\)\) ⇒ S24\(ς\)$

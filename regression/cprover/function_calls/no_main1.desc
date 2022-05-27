@@ -1,6 +1,6 @@
 CORE
 no_main1.c
-
+--inline
 ^EXIT=6$
 ^SIGNAL=0$
 ^error: The program has no entry point$

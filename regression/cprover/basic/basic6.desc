@@ -1,6 +1,6 @@
 CORE
 basic6.c
---text --solve
+--text --solve --inline
 ^EXIT=0$
 ^SIGNAL=0$
 ^\(23\) ∀ ς : state \. S20\(ς\) ⇒ S21\(ς\[❝x❞:=1\]\)$

@@ -1,6 +1,6 @@
 CORE
 while-break1.c
---text --solve
+--text --solve --inline
 ^EXIT=0$
 ^SIGNAL=0$
 ^\(\d+\) ∀ ς : state \. S28\(ς\) ⇒ S22in\(ς\)$

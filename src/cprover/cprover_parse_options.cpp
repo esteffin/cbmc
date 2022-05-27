@@ -141,7 +141,16 @@ int cprover_parse_optionst::main()
     adjust_float_expressions(goto_model);
     instrument_given_invariants(goto_model);
 
-    bool perform_inlining = !cmdline.isset("no-inline");
+    bool perform_inlining;
+
+    if(cmdline.isset("smt2"))
+    {
+      perform_inlining = !cmdline.isset("no-inline");
+    }
+    else
+    {
+      perform_inlining = cmdline.isset("inline");
+    }
 
     if(!perform_inlining)
       instrument_contracts(goto_model);

@@ -1,6 +1,6 @@
 CORE
 basic5.c
---text --solve
+--text --solve --inline
 ^EXIT=10$
 ^SIGNAL=0$
 ^\(\d+\) ∀ ς : state \. S21\(ς\) ⇒ S22\(ς\[❝main::1::c1❞:=ς\(❝main::1::x❞\) ≥ 10\]\)$

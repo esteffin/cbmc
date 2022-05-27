@@ -1,6 +1,6 @@
 CORE
 struct3.c
---text --solve
+--text --solve --inline
 ^EXIT=0$
 ^SIGNAL=0$
 ^\(\d+\) ∀ ς : state \. S\d+\(ς\) ⇒ S\d+\(ς\[❝b❞\.❝x❞:=ς\(❝a❞\.❝x❞\)\]\[❝b❞\.❝y❞:=ς\(❝a❞\.❝y❞\)\]\)$

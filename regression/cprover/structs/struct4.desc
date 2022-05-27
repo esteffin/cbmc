@@ -1,6 +1,6 @@
 CORE
 struct4.c
---text --solve
+--text --solve --inline
 ^EXIT=0$
 ^SIGNAL=0$
 ^\(\d+\) ∀ ς : state \. S\d+\(ς\) ⇒ S\d+\(ς\[❝a❞\.❝x❞:=10\]\[❝a❞\.❝y❞:=20\]\)$

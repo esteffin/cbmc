@@ -1,6 +1,6 @@
 CORE
 struct2.c
---text --solve
+--text --solve --inline
 ^EXIT=0$
 ^SIGNAL=0$
 ^\(\d+\) ∀ ς : state \. S20\(ς\) ⇒ S21\(ς\[❝s❞.❝x❞:=1\]\)$

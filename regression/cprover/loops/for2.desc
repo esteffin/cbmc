@@ -1,6 +1,6 @@
 CORE
 for2.c
---text --solve --unwind 10
+--text --solve --unwind 10 --inline
 ^EXIT=10$
 ^SIGNAL=0$
 ^\(\d+\) ∀ ς : state \. S25\(ς\) ⇒ S22in\(ς\)$
