@@ -8,6 +8,7 @@ Author:
 
 #include "state_encoding.h"
 
+#include <util/arith_tools.h>
 #include <util/c_types.h>
 #include <util/format_expr.h>
 #include <util/mathematical_expr.h>
@@ -622,13 +623,41 @@ void state_encodingt::function_call_symbol(
 
     // Evaluate the arguments of the call in the 'in state'
     exprt arguments_state = state_expr();
+    const auto &arguments = loc->call_arguments();
 
+    // regular parameters
     for(std::size_t i = 0; i < type.parameters().size(); i++)
     {
       auto address = object_address_exprt(symbol_exprt(
         f->second.parameter_identifiers[i], type.parameters()[i].type()));
-      auto argument = loc->call_arguments()[i];
-      auto value = evaluate_expr(loc, state_expr(), argument);
+      auto value = evaluate_expr(loc, state_expr(), arguments[i]);
+      arguments_state = update_state_exprt(arguments_state, address, value);
+    }
+
+    // extra arguments, i.e., va_arg
+    if(arguments.size() > type.parameters().size())
+    {
+      std::vector<exprt> va_args_elements;
+
+      for(std::size_t i = type.parameters().size(); i < arguments.size(); i++)
+      {
+        auto index = i - type.parameters().size();
+        auto id = id2string(identifier) + "::va_arg" + std::to_string(index);
+        auto address =
+          object_address_exprt(symbol_exprt(id, arguments[i].type()));
+        auto value = evaluate_expr(loc, state_expr(), arguments[i]);
+        va_args_elements.push_back(typecast_exprt::conditional_cast(
+          address, pointer_type(empty_typet())));
+        arguments_state = update_state_exprt(arguments_state, address, value);
+      }
+
+      auto va_count = arguments.size() - type.parameters().size();
+      auto id = id2string(identifier) + "::va_args";
+      auto va_args_type = array_typet(
+        pointer_type(empty_typet()), from_integer(va_count, size_type()));
+      auto va_args = symbol_exprt(id, va_args_type);
+      auto address = object_address_exprt(va_args);
+      auto value = array_exprt(va_args_elements, va_args_type);
       arguments_state = update_state_exprt(arguments_state, address, value);
     }
 
