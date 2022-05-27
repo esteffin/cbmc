@@ -250,6 +250,10 @@ exprt simplify_live_object_expr(state_live_object_exprt src, const namespacet &n
     if(has_prefix(id2string(identifier), "allocate-"))
     {
     }
+    else if(identifier == "return_value")
+    {
+      return true_exprt(); // never dies
+    }
     else
     {
       const auto &symbol = ns.lookup(identifier);

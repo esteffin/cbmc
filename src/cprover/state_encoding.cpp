@@ -656,8 +656,25 @@ void state_encodingt::function_call_symbol(
     auto exit_state =
       symbol_exprt(exit_state_identifier, state_predicate_type());
 
-    // now link up return state
-    dest << equal_exprt(out_state_expr(loc), std::move(exit_state));
+    // now assign the return value, if any
+    if(loc->call_lhs().is_not_nil())
+    {
+      auto rhs = symbol_exprt("return_value", loc->call_lhs().type());
+      auto state = state_expr();
+      auto address = address_rec(exit_loc, state, loc->call_lhs());
+      auto rhs_evaluated = evaluate_expr(exit_loc, state, rhs);
+      exprt new_state = update_state_exprt(state, address, rhs_evaluated);
+      dest << forall_exprt(
+        {state_expr()},
+        implies_exprt(
+          function_application_exprt(std::move(exit_state), {state_expr()}),
+          function_application_exprt(out_state_expr(loc), {new_state})));
+    }
+    else
+    {
+      // link up return state to exit state
+      dest << equal_exprt(out_state_expr(loc), std::move(exit_state));
+    }
   }
 }
 
@@ -868,6 +885,7 @@ void state_encoding(
     // sort alphabetically
     const auto sorted = goto_model.goto_functions.sorted();
     const namespacet ns(goto_model.symbol_table);
+    bool found = false;
     for(auto &f : sorted)
     {
       const auto &symbol = ns.lookup(f->first);
@@ -878,8 +896,12 @@ void state_encoding(
         dest.annotation("");
         dest.annotation("function " + id2string(f->first));
         state_encodingt{goto_model}(f, dest);
+        found = true;
       }
     }
+
+    if(!found)
+      throw incorrect_goto_program_exceptiont("The program has no entry point");
   }
 }
 

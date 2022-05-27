@@ -163,6 +163,9 @@ void axiomst::writeable_object()
       a_it != object_address_exprs.end();
       a_it++)
   {
+    if(a_it->object_identifier() == "return_value")
+      continue;
+
     auto &symbol = ns.lookup(a_it->object_expr());
     bool is_const = symbol.type.get_bool(ID_C_constant);
     for(auto b_it = writeable_object_exprs.begin();
