@@ -16,6 +16,7 @@ Author:
 #include <util/c_types.h>
 #include <util/format_expr.h>
 #include <util/pointer_predicates.h>
+#include <util/prefix.h>
 #include <util/simplify_expr.h>
 #include <util/string_constant.h>
 #include <util/symbol.h>
@@ -164,6 +165,10 @@ void axiomst::writeable_object()
       a_it++)
   {
     if(a_it->object_identifier() == "return_value")
+      continue;
+    else if(has_prefix(id2string(a_it->object_identifier()), "va_args::"))
+      continue;
+    else if(has_prefix(id2string(a_it->object_identifier()), "va_arg::"))
       continue;
 
     auto &symbol = ns.lookup(a_it->object_expr());

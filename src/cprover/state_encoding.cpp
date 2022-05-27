@@ -41,6 +41,7 @@ public:
 
   void encode(
     const goto_functiont &,
+    const irep_idt function_identifier,
     const std::string &state_prefix,
     const std::string &annotation,
     const symbol_exprt &entry_state,
@@ -82,6 +83,7 @@ protected:
   void function_call(goto_programt::const_targett, encoding_targett &);
   void function_call_symbol(goto_programt::const_targett, encoding_targett &);
 
+  irep_idt function_identifier;
   std::string state_prefix;
   std::string annotation;
   loct first_loc;
@@ -89,6 +91,8 @@ protected:
   exprt return_lhs = nil_exprt();
   using incomingt = std::map<loct, std::vector<loct>>;
   incomingt incoming;
+
+  static symbol_exprt va_args(irep_idt function);
 };
 
 symbol_exprt state_encodingt::out_state_expr(loct loc) const
@@ -178,10 +182,9 @@ exprt state_encodingt::replace_nondet_rec(
     }
     else if(statement == ID_va_start)
     {
-      irep_idt identifier =
-        "va_start::" + state_prefix + std::to_string(loc->location_number);
-      auto symbol = symbol_exprt(identifier, side_effect.type());
-      return std::move(symbol);
+      // return address of va_args array
+      return typecast_exprt::conditional_cast(
+        object_address_exprt(va_args(function_identifier)), what.type());
     }
     else
       return what; // leave it
@@ -519,6 +522,13 @@ static bool has_contract(const code_with_contract_typet &contract)
          !contract.ensures().empty();
 }
 
+symbol_exprt state_encodingt::va_args(irep_idt function)
+{
+  return symbol_exprt(
+    "va_args::" + id2string(function),
+    pointer_type(pointer_type(empty_typet())));
+}
+
 void state_encodingt::function_call_symbol(
   goto_programt::const_targett loc,
   encoding_targett &dest)
@@ -642,7 +652,8 @@ void state_encodingt::function_call_symbol(
       for(std::size_t i = type.parameters().size(); i < arguments.size(); i++)
       {
         auto index = i - type.parameters().size();
-        auto id = id2string(identifier) + "::va_arg" + std::to_string(index);
+        auto id =
+          "va_arg::" + id2string(identifier) + "::" + std::to_string(index);
         auto address =
           object_address_exprt(symbol_exprt(id, arguments[i].type()));
         auto value = evaluate_expr(loc, state_expr(), arguments[i]);
@@ -652,12 +663,13 @@ void state_encodingt::function_call_symbol(
       }
 
       auto va_count = arguments.size() - type.parameters().size();
-      auto id = id2string(identifier) + "::va_args";
-      auto va_args_type = array_typet(
+      auto address = object_address_exprt(va_args(identifier));
+      auto array_type = array_typet(
         pointer_type(empty_typet()), from_integer(va_count, size_type()));
-      auto va_args = symbol_exprt(id, va_args_type);
-      auto address = object_address_exprt(va_args);
-      auto value = array_exprt(va_args_elements, va_args_type);
+      auto value = typecast_exprt(
+        address_of_exprt(
+          array_exprt(va_args_elements, array_type), pointer_type(array_type)),
+        address.type());
       arguments_state = update_state_exprt(arguments_state, address, value);
     }
 
@@ -672,6 +684,7 @@ void state_encodingt::function_call_symbol(
       state_prefix + std::to_string(loc->location_number) + ".";
     body_state_encoding.encode(
       f->second,
+      identifier,
       new_state_prefix,
       new_annotation,
       function_entry_state,
@@ -749,11 +762,19 @@ void state_encodingt::operator()(
 
   auto annotation = id2string(f_entry->first);
 
-  encode(goto_function, "S", annotation, in_state, nil_exprt(), dest);
+  encode(
+    goto_function,
+    f_entry->first,
+    "S",
+    annotation,
+    in_state,
+    nil_exprt(),
+    dest);
 }
 
 void state_encodingt::encode(
   const goto_functiont &goto_function,
+  const irep_idt function_identifier,
   const std::string &state_prefix,
   const std::string &annotation,
   const symbol_exprt &entry_state,
@@ -761,6 +782,7 @@ void state_encodingt::encode(
   encoding_targett &dest)
 {
   first_loc = goto_function.body.instructions.begin();
+  this->function_identifier = function_identifier;
   this->state_prefix = state_prefix;
   this->annotation = annotation;
   this->entry_state = entry_state;

@@ -16,6 +16,7 @@ Author:
 #include <util/format_type.h>
 #include <util/namespace.h>
 #include <util/pointer_expr.h>
+#include <util/prefix.h>
 #include <util/std_expr.h>
 #include <util/symbol.h>
 
@@ -97,6 +98,11 @@ static bool stack_and_not_dirty(
   if(object.has_value())
   {
     auto symbol_expr = object->object_expr();
+    auto identifier = symbol_expr.get_identifier();
+    if(has_prefix(id2string(identifier), "va_arg::"))
+      return true; // on the stack, and might alias
+    else if(has_prefix(id2string(identifier), "var_args::"))
+      return false; // on the stack, but can't take address
     const auto &symbol = ns.lookup(symbol_expr);
     return !symbol.is_static_lifetime &&
            address_taken.find(symbol_expr) == address_taken.end();
