@@ -76,11 +76,13 @@ exprt simplify_evaluate_update(
       auto simplified_cond = simplify_state_expr(*may_alias, address_taken, ns);
       auto new_evaluate_expr = evaluate_expr;
       new_evaluate_expr.state() = update_state_expr.state();
+      auto simplified_new_evaluate_expr = simplify_state_expr_node(
+        new_evaluate_expr, address_taken, ns); // rec. call
       return if_exprt(
         std::move(simplified_cond),
         typecast_exprt::conditional_cast(
           update_state_expr.new_value(), evaluate_expr.type()),
-        std::move(new_evaluate_expr));
+        std::move(simplified_new_evaluate_expr));
     }
   }
 

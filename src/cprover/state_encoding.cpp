@@ -459,6 +459,45 @@ exprt state_encodingt::assignment_constraint_rec(
 
     return new_state;
   }
+  else if(lhs.type().id() == ID_array)
+  {
+    // split up into elements, recursively
+    const namespacet ns(goto_model.symbol_table);
+    auto &array_type = to_array_type(lhs.type());
+    if(array_type.size().is_constant())
+    {
+      auto size_int =
+        numeric_cast_v<mp_integer>(to_constant_expr(array_type.size()));
+      exprt new_state = state;
+
+      for(mp_integer i = 0; i < size_int; ++i)
+      {
+        auto i_expr = from_integer(i, array_type.index_type());
+        exprt lhs_index = index_exprt(lhs, i_expr);
+        exprt rhs_index = index_exprt(rhs, i_expr);
+
+        if(rhs.id() == ID_array)
+          rhs_index = simplify_expr(rhs_index, ns);
+        else if(
+          rhs.id() == ID_side_effect &&
+          to_side_effect_expr(rhs).get_statement() == ID_nondet)
+        {
+          rhs_index =
+            side_effect_expr_nondett(rhs_index.type(), rhs.source_location());
+        }
+
+        new_state = assignment_constraint_rec(
+          loc, new_state, lhs_index, rhs_index, nondet_symbols);
+      }
+
+      return new_state;
+    }
+    else
+    {
+      // TODO: quantifier?
+      return state;
+    }
+  }
   else
   {
     auto s = state_expr();
@@ -821,12 +860,7 @@ void state_encodingt::encode(
 
       DATA_INVARIANT(lhs.type() == rhs.type(), "assignment type consistency");
 
-      if(lhs.type().id() == ID_array)
-      {
-        // skip
-        dest << equal_exprt(out_state_expr(loc), in_state_expr(loc));
-      }
-      else if(
+      if(
         lhs.id() == ID_symbol &&
         has_prefix(
           id2string(to_symbol_expr(lhs).get_identifier()), CPROVER_PREFIX) &&
