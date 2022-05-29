@@ -918,9 +918,32 @@ void state_encodingt::encode(
     }
     else if(
       loc->is_skip() || loc->is_assert() || loc->is_location() ||
-      loc->is_end_function() || loc->is_other())
+      loc->is_end_function())
     {
+      // these do not change the state
       dest << equal_exprt(out_state_expr(loc), in_state_expr(loc));
+    }
+    else if(loc->is_atomic_begin() || loc->is_atomic_end())
+    {
+      // no concurrency yet
+      dest << equal_exprt(out_state_expr(loc), in_state_expr(loc));
+    }
+    else if(loc->is_other())
+    {
+      auto &code = loc->code();
+      auto &statement = code.get_statement();
+      if(statement == ID_array_set)
+      {
+        DATA_INVARIANT(
+          code.operands().size() == 2, "array_set has two operands");
+        // op0 must be an array
+        dest << equal_exprt(out_state_expr(loc), in_state_expr(loc));
+      }
+      else
+      {
+        // ought to print a warning
+        dest << equal_exprt(out_state_expr(loc), in_state_expr(loc));
+      }
     }
     else if(loc->is_decl() || loc->is_dead())
     {
@@ -944,6 +967,11 @@ void state_encodingt::encode(
       else
       {
       }
+    }
+    else
+    {
+      std::cout << "X: " << loc->type() << '\n';
+      DATA_INVARIANT(false, "unexpected GOTO instruction");
     }
   }
 }
