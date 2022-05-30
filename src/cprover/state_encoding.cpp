@@ -691,8 +691,9 @@ void state_encodingt::function_call_symbol(
       for(std::size_t i = type.parameters().size(); i < arguments.size(); i++)
       {
         auto index = i - type.parameters().size();
-        auto id =
-          "va_arg::" + id2string(identifier) + "::" + std::to_string(index);
+        auto id = "va_arg::" + state_prefix +
+                  std::to_string(loc->location_number) +
+                  "::" + std::to_string(index);
         auto address =
           object_address_exprt(symbol_exprt(id, arguments[i].type()));
         auto value = evaluate_expr(loc, state_expr(), arguments[i]);
@@ -701,18 +702,32 @@ void state_encodingt::function_call_symbol(
         arguments_state = update_state_exprt(arguments_state, address, value);
       }
 
-      auto va_count = arguments.size() - type.parameters().size();
-      auto address = object_address_exprt(va_args(identifier));
+      // assign these to an array
+      auto va_count = va_args_elements.size();
       auto array_type = array_typet(
         pointer_type(empty_typet()), from_integer(va_count, size_type()));
-      auto value = typecast_exprt(
-        address_of_exprt(
-          array_exprt(va_args_elements, array_type), pointer_type(array_type)),
-        address.type());
+      auto array_identifier =
+        "va_arg_array::" + state_prefix + std::to_string(loc->location_number);
+      auto array_symbol = symbol_exprt(array_identifier, array_type);
+
+      for(std::size_t i = 0; i < va_count; i++)
+      {
+        auto address = element_address_exprt(
+          object_address_exprt(array_symbol),
+          from_integer(i, array_type.index_type()));
+        auto value = va_args_elements[i];
+        arguments_state = update_state_exprt(arguments_state, address, value);
+      }
+
+      // now make va_args point to the beginning of that array
+      auto address = object_address_exprt(va_args(identifier));
+      auto value = element_address_exprt(
+        object_address_exprt(array_symbol),
+        from_integer(0, array_type.index_type()));
       arguments_state = update_state_exprt(arguments_state, address, value);
     }
 
-    // Now assign them
+    // Now assign all the arguments to the parameters
     auto function_entry_state = state_expr_with_suffix(loc, "Entry");
     dest << forall_states_expr(
       loc, function_application_exprt(function_entry_state, {arguments_state}));

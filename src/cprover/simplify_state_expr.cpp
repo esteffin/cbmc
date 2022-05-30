@@ -256,6 +256,10 @@ exprt simplify_live_object_expr(state_live_object_exprt src, const namespacet &n
     {
       return true_exprt(); // never dies
     }
+    else if(has_prefix(id2string(identifier), "va_args::"))
+    {
+      return true_exprt(); // might be 'dead'
+    }
     else
     {
       const auto &symbol = ns.lookup(identifier);
@@ -298,6 +302,10 @@ exprt simplify_writeable_object_expr(
 
     if(has_prefix(id2string(identifier), "allocate-"))
     {
+    }
+    else if(has_prefix(id2string(identifier), "va_args::"))
+    {
+      return true_exprt(); // always writeable
     }
     else
     {
