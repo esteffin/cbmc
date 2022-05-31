@@ -884,6 +884,14 @@ void state_encodingt::encode(
         // skip for now
         dest << equal_exprt(out_state_expr(loc), in_state_expr(loc));
       }
+      else if(
+        lhs.id() == ID_symbol &&
+        to_symbol_expr(lhs).get_identifier() == "_DefaultRuneLocale")
+      {
+        // /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/runetype.h
+        // skip for now
+        dest << equal_exprt(out_state_expr(loc), in_state_expr(loc));
+      }
       else
         dest << assignment_constraint(loc, lhs, rhs);
     }
