@@ -43,6 +43,7 @@ public:
     const goto_functiont &,
     const irep_idt function_identifier,
     const std::string &state_prefix,
+    const std::vector<irep_idt> &call_stack,
     const std::string &annotation,
     const symbol_exprt &entry_state,
     const exprt &return_lhs,
@@ -86,6 +87,7 @@ protected:
   irep_idt function_identifier;
   std::string state_prefix;
   std::string annotation;
+  std::vector<irep_idt> call_stack;
   loct first_loc;
   symbol_exprt entry_state = symbol_exprt(irep_idt(), typet());
   exprt return_lhs = nil_exprt();
@@ -736,10 +738,13 @@ void state_encodingt::function_call_symbol(
     state_encodingt body_state_encoding(goto_model);
     auto new_state_prefix =
       state_prefix + std::to_string(loc->location_number) + ".";
+    auto new_call_stack = call_stack;
+    new_call_stack.push_back(function_identifier);
     body_state_encoding.encode(
       f->second,
       identifier,
       new_state_prefix,
+      new_call_stack,
       new_annotation,
       function_entry_state,
       nil_exprt(),
@@ -820,6 +825,7 @@ void state_encodingt::operator()(
     goto_function,
     f_entry->first,
     "S",
+    {},
     annotation,
     in_state,
     nil_exprt(),
@@ -830,6 +836,7 @@ void state_encodingt::encode(
   const goto_functiont &goto_function,
   const irep_idt function_identifier,
   const std::string &state_prefix,
+  const std::vector<irep_idt> &call_stack,
   const std::string &annotation,
   const symbol_exprt &entry_state,
   const exprt &return_lhs,
@@ -838,6 +845,7 @@ void state_encodingt::encode(
   first_loc = goto_function.body.instructions.begin();
   this->function_identifier = function_identifier;
   this->state_prefix = state_prefix;
+  this->call_stack = call_stack;
   this->annotation = annotation;
   this->entry_state = entry_state;
   this->return_lhs = return_lhs;
