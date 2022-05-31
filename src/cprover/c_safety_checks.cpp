@@ -360,6 +360,22 @@ void c_safety_checks(
             dest.add(goto_programt::make_assertion(condition, source_location));
           }
         }
+        else if(identifier == "__builtin___memset_chk") // clang variant
+        {
+          if(
+            it->call_arguments().size() == 4 &&
+            it->call_arguments()[0].type().id() == ID_pointer &&
+            it->call_arguments()[2].type().id() == ID_unsignedbv)
+          {
+            const auto &pointer = it->call_arguments()[0];
+            const auto &size = it->call_arguments()[2];
+            auto condition = w_ok_exprt(pointer, size);
+            auto source_location = it->source_location();
+            source_location.set_property_class("memset");
+            source_location.set_comment("memset destination must be valid");
+            dest.add(goto_programt::make_assertion(condition, source_location));
+          }
+        }
       }
     }
 
