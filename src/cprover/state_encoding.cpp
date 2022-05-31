@@ -670,7 +670,13 @@ void state_encodingt::function_call_symbol(
   }
   else
   {
-    // Yes, we've got a body.
+    // Yes, we've got a body. Check whether this is recursive.
+    if(std::find(call_stack.begin(), call_stack.end(), identifier) != call_stack.end())
+    {
+      // ignore
+      dest << equal_exprt(out_state_expr(loc), in_state_expr(loc));
+      return;
+    }
 
     // Evaluate the arguments of the call in the 'in state'
     exprt arguments_state = state_expr();
