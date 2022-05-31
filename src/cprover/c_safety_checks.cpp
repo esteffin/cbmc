@@ -326,6 +326,23 @@ void c_safety_checks(
             dest.add(goto_programt::make_assertion(condition, source_location));
           }
         }
+        else if(identifier == "memchr")
+        {
+          if(
+            it->call_arguments().size() == 3 &&
+            it->call_arguments()[0].type().id() == ID_pointer &&
+            it->call_arguments()[2].type().id() == ID_unsignedbv)
+          {
+            // void *memchr(const void *, int, size_t);
+            const auto &p = it->call_arguments()[0];
+            const auto &size = it->call_arguments()[2];
+            auto condition = r_ok_exprt(p, size);
+            auto source_location = it->source_location();
+            source_location.set_property_class("memchr");
+            source_location.set_comment("memchr source must be valid");
+            dest.add(goto_programt::make_assertion(condition, source_location));
+          }
+        }
         else if(identifier == "memset")
         {
           if(
