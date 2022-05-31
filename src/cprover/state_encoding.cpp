@@ -570,6 +570,8 @@ symbol_exprt state_encodingt::va_args(irep_idt function)
     pointer_type(pointer_type(empty_typet())));
 }
 
+std::set<irep_idt> no_body_warnings;
+
 void state_encodingt::function_call_symbol(
   goto_programt::const_targett loc,
   encoding_targett &dest)
@@ -667,6 +669,10 @@ void state_encodingt::function_call_symbol(
       // This is a SKIP.
       dest << equal_exprt(out_state_expr(loc), in_state_expr(loc));
     }
+
+    // issue a warning, but only once
+    if(no_body_warnings.insert(identifier).second)
+      std::cout << "warning: no body for function " << identifier << '\n';
   }
   else
   {
