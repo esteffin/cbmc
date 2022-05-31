@@ -130,13 +130,21 @@ int cprover_parse_optionst::main()
     }
 
     console_message_handlert message_handler;
+    null_message_handlert null_message_handler;
 
     optionst options;
     auto goto_model =
       initialize_goto_model(cmdline.args, message_handler, options);
 
+    auto &remove_function_pointers_message_handler =
+      cmdline.isset("verbose")
+        ? static_cast<message_handlert &>(message_handler)
+        : static_cast<message_handlert &>(null_message_handler);
+
     remove_function_pointers(
-      message_handler, goto_model, cmdline.isset("safety"));
+      remove_function_pointers_message_handler,
+      goto_model,
+      cmdline.isset("safety"));
 
     adjust_float_expressions(goto_model);
     instrument_given_invariants(goto_model);
