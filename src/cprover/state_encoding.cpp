@@ -672,7 +672,7 @@ void state_encodingt::function_call_symbol(
 
     // issue a warning, but only once
     if(no_body_warnings.insert(identifier).second)
-      std::cout << "warning: no body for function " << identifier << '\n';
+      std::cout << "**** WARNING: no body for function " << identifier << '\n';
   }
   else
   {
