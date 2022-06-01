@@ -23,7 +23,7 @@ Author: Daniel Kroening, dkr@amazon.com
   "(inline)(no-inline)"                                                        \
   "D:I:"                                                                       \
   "(32)(64)"                                                                   \
-  "(show-goto-functions)(show-loops)"                                          \
+  "(show-goto-functions)(show-loops)(show-properties)"                         \
   "(show-functions-with-loops)"                                                \
   "(validate-goto-model)"                                                      \
   "(verbose)"

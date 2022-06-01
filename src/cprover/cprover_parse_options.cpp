@@ -16,6 +16,7 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <util/exit_codes.h>
 #include <util/options.h>
 #include <util/signal_catcher.h>
+#include <util/ui_message.h>
 #include <util/unicode.h>
 #include <util/version.h>
 
@@ -26,10 +27,10 @@ Author: Daniel Kroening, dkr@amazon.com
 #include <goto-programs/remove_function_pointers.h>
 #include <goto-programs/set_properties.h>
 #include <goto-programs/show_goto_functions.h>
+#include <goto-programs/show_properties.h>
 
 #include <ansi-c/ansi_c_language.h>
 #include <ansi-c/gcc_version.h>
-
 #include <langapi/mode.h>
 
 #include "c_safety_checks.h"
@@ -205,6 +206,13 @@ int cprover_parse_optionst::main()
     if(cmdline.isset("validate-goto-model"))
     {
       goto_model.validate();
+    }
+
+    if(cmdline.isset("show-properties"))
+    {
+      ui_message_handlert ui_message_handler(cmdline, "cprover");
+      show_properties(goto_model, ui_message_handler);
+      return CPROVER_EXIT_SUCCESS;
     }
 
     if(cmdline.isset("smt2") || cmdline.isset("text") || variable_encoding)
