@@ -298,6 +298,16 @@ exprt state_encodingt::evaluate_expr_rec(
       evaluate_expr_rec(loc, state, is_cstring_expr.op(), bound_symbols);
     return binary_predicate_exprt(state, ID_state_is_cstring, pointer);
   }
+  else if(what.id() == ID_is_sentinel_dll)
+  {
+    // we need to add the state
+    const auto &is_sentinel_dll_expr = to_binary_expr(what);
+    auto head =
+      evaluate_expr_rec(loc, state, is_sentinel_dll_expr.op0(), bound_symbols);
+    auto tail =
+      evaluate_expr_rec(loc, state, is_sentinel_dll_expr.op1(), bound_symbols);
+    return state_is_sentinel_dll_exprt(state, head, tail);
+  }
   else if(what.id() == ID_side_effect)
   {
     // leave as is

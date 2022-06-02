@@ -82,6 +82,9 @@ protected:
   std::set<state_object_size_exprt> object_size_exprs;
   void object_size();
   void object_size_fc();
+
+  std::set<state_is_sentinel_dll_exprt> is_sentinel_dll_exprs;
+  void is_sentinel_dll();
 };
 
 static inline axiomst &operator<<(axiomst &axioms, exprt src)

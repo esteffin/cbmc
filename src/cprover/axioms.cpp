@@ -15,6 +15,7 @@ Author:
 #include <util/bitvector_expr.h>
 #include <util/c_types.h>
 #include <util/format_expr.h>
+#include <util/pointer_offset_size.h>
 #include <util/pointer_predicates.h>
 #include <util/prefix.h>
 #include <util/simplify_expr.h>
@@ -321,6 +322,7 @@ exprt axiomst::replace(exprt src)
 
   if(
     src.id() == ID_evaluate || src.id() == ID_state_is_cstring ||
+    src.id() == ID_state_is_sentinel_dll || 
     src.id() == ID_state_is_dynamic_object ||
     src.id() == ID_state_object_size || src.id() == ID_state_live_object ||
     src.id() == ID_state_writeable_object || src.id() == ID_state_r_ok ||
@@ -351,6 +353,58 @@ exprt axiomst::replace(exprt src)
     op = replace(op);
 
   return src;
+}
+
+optionalt<exprt> sentinel_dll_member(
+  const exprt &state,
+  const exprt &node,
+  bool next, // vs. prev
+  const namespacet &ns)
+{
+  if(node.type().id() != ID_pointer)
+    return {};
+
+  if(to_pointer_type(node.type()).base_type().id() != ID_struct_tag)
+    return {};
+
+  const auto &struct_type =
+    ns.follow_tag(to_struct_tag_type(to_pointer_type(node.type()).base_type()));
+
+  // the first pointer to a struct is 'next', the second 'prev'
+  optionalt<struct_typet::componentt> next_m, prev_m;
+
+  for(auto &m : struct_type.components())
+  {
+    if(m.type() == node.type()) // we are strict on the type
+    {
+      if(!next_m.has_value())
+        next_m = m;
+      else
+        prev_m = m;
+    }
+  }
+
+  struct_typet::componentt component;
+
+  if(next)
+  {
+    if(!next_m.has_value())
+      return {};
+    else
+      component = *next_m;
+  }
+  else
+  {
+    if(!prev_m.has_value())
+      return {};
+    else
+      component = *prev_m;
+  }
+
+  auto field_address = field_address_exprt(
+    node, component.get_name(), pointer_type(component.type()));
+
+  return evaluate_exprt(state, field_address, component.type());
 }
 
 void axiomst::node(const exprt &src)
@@ -400,6 +454,65 @@ void axiomst::node(const exprt &src)
       dest << instance;
       evaluate_exprs.insert(star_p);
       is_cstring_exprs.insert(is_cstring_plus_one);
+    }
+  }
+  else if(src.id() == ID_state_is_sentinel_dll)
+  {
+    auto &is_sentinel_dll_expr = to_state_is_sentinel_dll_expr(src);
+    is_sentinel_dll_exprs.insert(is_sentinel_dll_expr);
+
+    auto ok_expr_h_size_opt = size_of_expr(
+      to_pointer_type(is_sentinel_dll_expr.head().type()).base_type(), ns);
+
+    auto ok_expr_h = state_ok_exprt(
+      ID_state_rw_ok,
+      is_sentinel_dll_expr.state(),
+      is_sentinel_dll_expr.head(),
+      *ok_expr_h_size_opt);
+
+    auto ok_expr_t_size_opt = size_of_expr(
+      to_pointer_type(is_sentinel_dll_expr.tail().type()).base_type(), ns);
+
+    auto ok_expr_t = state_ok_exprt(
+      ID_state_rw_ok,
+      is_sentinel_dll_expr.state(),
+      is_sentinel_dll_expr.tail(),
+      *ok_expr_t_size_opt);
+
+    {
+      // is_sentinel_dll(ς, h, t) ⇒ rw_ok(ς, h) ∧ rw_ok(ς, t)
+      auto instance1 =
+        replace(implies_exprt(src, and_exprt(ok_expr_h, ok_expr_t)));
+      if(verbose)
+        std::cout << "AXIOM-is-sentinel-dll-1: " << format(instance1) << "\n";
+      dest << instance1;
+    }
+
+    {
+      // rw_ok(h) ∧ rw_ok(t) ∧ ς(h->n)=t ∧ ς(t->p)=h ⇒ is_sentinel_dll(ς, h, t)
+      auto head_next = sentinel_dll_member(
+        is_sentinel_dll_expr.state(), is_sentinel_dll_expr.head(), true, ns);
+
+      auto tail_prev = sentinel_dll_member(
+        is_sentinel_dll_expr.state(), is_sentinel_dll_expr.tail(), false, ns);
+
+      if(head_next.has_value() && tail_prev.has_value())
+      {
+        auto head_next_is_tail =
+          equal_exprt(*head_next, is_sentinel_dll_expr.tail());
+
+        auto tail_prev_is_head =
+          equal_exprt(*tail_prev, is_sentinel_dll_expr.head());
+
+        auto instance2 = replace(implies_exprt(
+          and_exprt(
+            ok_expr_h, ok_expr_t /*, head_next_is_tail, tail_prev_is_head*/),
+          src));
+
+        if(verbose)
+          std::cout << "AXIOM-is-sentinel-dll-2: " << format(instance2) << "\n";
+        dest << instance2;
+      }
     }
   }
   else if(src.id() == ID_evaluate)
