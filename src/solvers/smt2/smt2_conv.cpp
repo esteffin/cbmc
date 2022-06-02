@@ -1694,11 +1694,21 @@ void smt2_convt::convert_expr(const exprt &expr)
   }
   else if(expr.id() == ID_element_address)
   {
+    // We turn this binary expression into a ternary expression
+    // by adding the size of the array elements as third argument.
     const auto &element_address_expr = to_element_address_expr(expr);
+
+    auto element_size_expr_opt =
+      ::size_of_expr(element_address_expr.element_type(), ns);
+    CHECK_RETURN(element_size_expr_opt.has_value());
+
     out << "(element-address-" << type2id(expr.type()) << ' ';
     convert_expr(element_address_expr.base());
     out << ' ';
     convert_expr(element_address_expr.index());
+    out << ' ';
+    convert_expr(typecast_exprt::conditional_cast(
+      *element_size_expr_opt, element_address_expr.index().type()));
     out << ')';
   }
   else if(expr.id() == ID_field_address)
@@ -5248,6 +5258,8 @@ void smt2_convt::find_symbols(const exprt &expr)
       out << "(declare-fun " << function << " (";
       convert_type(to_element_address_expr(expr).base().type());
       out << ' ';
+      convert_type(to_element_address_expr(expr).index().type());
+      out << ' '; // repeat, for the element size
       convert_type(to_element_address_expr(expr).index().type());
       out << ") ";
       convert_type(expr.type()); // return type
