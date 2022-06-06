@@ -371,16 +371,16 @@ optionalt<exprt> sentinel_dll_member(
     ns.follow_tag(to_struct_tag_type(to_pointer_type(node.type()).base_type()));
 
   // the first pointer to a struct is 'next', the second 'prev'
-  optionalt<struct_typet::componentt> next_m, prev_m;
+  const struct_typet::componentt *next_m = nullptr, *prev_m = nullptr;
 
   for(auto &m : struct_type.components())
   {
     if(m.type() == node.type()) // we are strict on the type
     {
-      if(!next_m.has_value())
-        next_m = m;
+      if(next_m == nullptr)
+        next_m = &m;
       else
-        prev_m = m;
+        prev_m = &m;
     }
   }
 
@@ -388,14 +388,14 @@ optionalt<exprt> sentinel_dll_member(
 
   if(next)
   {
-    if(!next_m.has_value())
+    if(next_m == nullptr)
       return {};
     else
       component = *next_m;
   }
   else
   {
-    if(!prev_m.has_value())
+    if(prev_m == nullptr)
       return {};
     else
       component = *prev_m;
