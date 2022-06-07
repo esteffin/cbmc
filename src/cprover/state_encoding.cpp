@@ -20,6 +20,7 @@ Author:
 #include <goto-programs/goto_model.h>
 
 #include "equality_propagation.h"
+#include "sentinel_dll.h"
 #include "solver.h"
 #include "state.h"
 #include "state_encoding_targets.h"

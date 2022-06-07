@@ -16,6 +16,7 @@ Author:
 
 #include <solvers/decision_procedure.h>
 
+#include "sentinel_dll.h"
 #include "state.h"
 
 #include <map>

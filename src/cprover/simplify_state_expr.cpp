@@ -26,6 +26,7 @@ Author:
 #include <util/symbol.h>
 
 #include "may_alias.h"
+#include "sentinel_dll.h"
 #include "state.h"
 
 #include <iostream>
@@ -527,6 +528,25 @@ exprt simplify_is_sentinel_dll_expr(
 {
   PRECONDITION(src.type().id() == ID_bool);
   const auto &state = src.state();
+  const auto &head = src.head();
+  const auto &tail = src.tail();
+
+  {
+    // ς(h.❝n❞) = t ∧ ς(t.❝p❞) = h --> is_sentinel_dll(ς, h, t)
+    auto head_next = sentinel_dll_next(state, head, ns);
+    auto tail_prev = sentinel_dll_prev(state, tail, ns);
+
+    if(head_next.has_value() && tail_prev.has_value())
+    {
+      // rec. calls
+      auto head_next_simplified =
+        simplify_state_expr(*head_next, address_taken, ns);
+      auto tail_prev_simplified =
+        simplify_state_expr(*tail_prev, address_taken, ns);
+      if(head_next_simplified == tail && tail_prev_simplified == head)
+        return true_exprt();
+    }
+  }
 
   if(state.id() == ID_update_state)
   {
@@ -534,13 +554,11 @@ exprt simplify_is_sentinel_dll_expr(
 
     // are we writing to something that might be a node pointer?
     const auto &update_type = update_state_expr.new_value().type();
-    if(update_type == src.head().type())
+    if(update_type != src.head().type())
     {
-    }
-    else // irrelevant
-    {
-      src.state() = update_state_expr.state();
-      return simplify_is_sentinel_dll_expr(src, address_taken, ns);
+      // update is irrelevant, drop update
+      auto without_update = src.with_state(update_state_expr.state());
+      return simplify_is_sentinel_dll_expr(without_update, address_taken, ns);
     }
   }
 

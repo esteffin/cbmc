@@ -126,6 +126,14 @@ public:
   {
     return op2();
   }
+
+  // helper
+  update_state_exprt with_state(exprt state) const
+  {
+    auto result = *this; // copy
+    result.state() = std::move(state);
+    return result;
+  }
 };
 
 /// \brief Cast an exprt to a \ref update_state_exprt
@@ -723,88 +731,6 @@ inline state_ok_exprt &to_state_ok_expr(exprt &expr)
     expr.id() == ID_state_r_ok || expr.id() == ID_state_w_ok ||
     expr.id() == ID_state_rw_ok);
   state_ok_exprt &ret = static_cast<state_ok_exprt &>(expr);
-  validate_expr(ret);
-  return ret;
-}
-
-class state_is_sentinel_dll_exprt : public multi_ary_exprt
-{
-public:
-  state_is_sentinel_dll_exprt(exprt state, exprt head, exprt tail)
-    : multi_ary_exprt(
-        ID_state_is_sentinel_dll,
-        {state, head, tail},
-        bool_typet())
-  {
-    PRECONDITION(this->state().type().id() == ID_state);
-    PRECONDITION(this->head().type().id() == ID_pointer);
-    PRECONDITION(this->tail().type().id() == ID_pointer);
-  }
-
-  state_is_sentinel_dll_exprt(exprt state, exprt head, exprt tail, exprt node)
-    : multi_ary_exprt(
-        ID_state_is_sentinel_dll,
-        {state, head, tail, node},
-        bool_typet())
-  {
-    PRECONDITION(this->state().type().id() == ID_state);
-    PRECONDITION(this->head().type().id() == ID_pointer);
-    PRECONDITION(this->tail().type().id() == ID_pointer);
-  }
-
-  const exprt &state() const
-  {
-    return op0();
-  }
-
-  exprt &state()
-  {
-    return op0();
-  }
-
-  const exprt &head() const
-  {
-    return op1();
-  }
-
-  exprt &head()
-  {
-    return op1();
-  }
-
-  const exprt &tail() const
-  {
-    return op2();
-  }
-
-  exprt &tail()
-  {
-    return op2();
-  }
-};
-
-/// \brief Cast an exprt to a \ref state_is_sentinel_dll_exprt
-///
-/// \a expr must be known to be \ref state_is_sentinel_dll_exprt.
-///
-/// \param expr: Source expression
-/// \return Object of type \ref state_is_sentinel_dll_exprt
-inline const state_is_sentinel_dll_exprt &
-to_state_is_sentinel_dll_expr(const exprt &expr)
-{
-  PRECONDITION(expr.id() == ID_state_is_sentinel_dll);
-  const state_is_sentinel_dll_exprt &ret =
-    static_cast<const state_is_sentinel_dll_exprt &>(expr);
-  validate_expr(ret);
-  return ret;
-}
-
-/// \copydoc to_state_is_sentinel_dll_expr(const exprt &)
-inline state_is_sentinel_dll_exprt &to_state_is_sentinel_dll_expr(exprt &expr)
-{
-  PRECONDITION(expr.id() == ID_state_is_sentinel_dll);
-  state_is_sentinel_dll_exprt &ret =
-    static_cast<state_is_sentinel_dll_exprt &>(expr);
   validate_expr(ret);
   return ret;
 }

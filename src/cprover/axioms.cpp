@@ -15,6 +15,7 @@ Author:
 #include <util/bitvector_expr.h>
 #include <util/c_types.h>
 #include <util/format_expr.h>
+#include <util/namespace.h>
 #include <util/pointer_offset_size.h>
 #include <util/pointer_predicates.h>
 #include <util/prefix.h>
@@ -23,7 +24,6 @@ Author:
 #include <util/symbol.h>
 
 #include "simplify_state_expr.h"
-#include "state.h"
 
 #include <iostream>
 
@@ -355,58 +355,6 @@ exprt axiomst::replace(exprt src)
   return src;
 }
 
-optionalt<exprt> sentinel_dll_member(
-  const exprt &state,
-  const exprt &node,
-  bool next, // vs. prev
-  const namespacet &ns)
-{
-  if(node.type().id() != ID_pointer)
-    return {};
-
-  if(to_pointer_type(node.type()).base_type().id() != ID_struct_tag)
-    return {};
-
-  const auto &struct_type =
-    ns.follow_tag(to_struct_tag_type(to_pointer_type(node.type()).base_type()));
-
-  // the first pointer to a struct is 'next', the second 'prev'
-  const struct_typet::componentt *next_m = nullptr, *prev_m = nullptr;
-
-  for(auto &m : struct_type.components())
-  {
-    if(m.type() == node.type()) // we are strict on the type
-    {
-      if(next_m == nullptr)
-        next_m = &m;
-      else
-        prev_m = &m;
-    }
-  }
-
-  struct_typet::componentt component;
-
-  if(next)
-  {
-    if(next_m == nullptr)
-      return {};
-    else
-      component = *next_m;
-  }
-  else
-  {
-    if(prev_m == nullptr)
-      return {};
-    else
-      component = *prev_m;
-  }
-
-  auto field_address = field_address_exprt(
-    node, component.get_name(), pointer_type(component.type()));
-
-  return evaluate_exprt(state, field_address, component.type());
-}
-
 void axiomst::node(const exprt &src)
 {
   if(src.id() == ID_state_is_cstring)
@@ -490,11 +438,11 @@ void axiomst::node(const exprt &src)
 
     {
       // rw_ok(h) ∧ rw_ok(t) ∧ ς(h->n)=t ∧ ς(t->p)=h ⇒ is_sentinel_dll(ς, h, t)
-      auto head_next = sentinel_dll_member(
-        is_sentinel_dll_expr.state(), is_sentinel_dll_expr.head(), true, ns);
+      auto head_next = sentinel_dll_next(
+        is_sentinel_dll_expr.state(), is_sentinel_dll_expr.head(), ns);
 
-      auto tail_prev = sentinel_dll_member(
-        is_sentinel_dll_expr.state(), is_sentinel_dll_expr.tail(), false, ns);
+      auto tail_prev = sentinel_dll_prev(
+        is_sentinel_dll_expr.state(), is_sentinel_dll_expr.tail(), ns);
 
       if(head_next.has_value() && tail_prev.has_value())
       {
