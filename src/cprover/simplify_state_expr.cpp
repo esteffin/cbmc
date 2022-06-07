@@ -520,6 +520,33 @@ exprt simplify_is_cstring_expr(
   return std::move(src);
 }
 
+exprt simplify_is_sentinel_dll_expr(
+  state_is_sentinel_dll_exprt src,
+  const std::unordered_set<symbol_exprt, irep_hash> &address_taken,
+  const namespacet &ns)
+{
+  PRECONDITION(src.type().id() == ID_bool);
+  const auto &state = src.state();
+
+  if(state.id() == ID_update_state)
+  {
+    const auto &update_state_expr = to_update_state_expr(state);
+
+    // are we writing to something that might be a node pointer?
+    const auto &update_type = update_state_expr.new_value().type();
+    if(update_type == src.head().type())
+    {
+    }
+    else // irrelevant
+    {
+      src.state() = update_state_expr.state();
+      return simplify_is_sentinel_dll_expr(src, address_taken, ns);
+    }
+  }
+
+  return std::move(src);
+}
+
 exprt simplify_state_expr_node(
   exprt src,
   const std::unordered_set<symbol_exprt, irep_hash> &address_taken,
@@ -565,6 +592,11 @@ exprt simplify_state_expr_node(
   {
     return simplify_is_cstring_expr(
       to_state_is_cstring_expr(src), address_taken, ns);
+  }
+  else if(src.id() == ID_state_is_sentinel_dll)
+  {
+    return simplify_is_sentinel_dll_expr(
+      to_state_is_sentinel_dll_expr(src), address_taken, ns);
   }
   else if(src.id() == ID_state_is_dynamic_object)
   {

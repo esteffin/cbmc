@@ -741,6 +741,17 @@ public:
     PRECONDITION(this->tail().type().id() == ID_pointer);
   }
 
+  state_is_sentinel_dll_exprt(exprt state, exprt head, exprt tail, exprt node)
+    : multi_ary_exprt(
+        ID_state_is_sentinel_dll,
+        {state, head, tail, node},
+        bool_typet())
+  {
+    PRECONDITION(this->state().type().id() == ID_state);
+    PRECONDITION(this->head().type().id() == ID_pointer);
+    PRECONDITION(this->tail().type().id() == ID_pointer);
+  }
+
   const exprt &state() const
   {
     return op0();

@@ -301,12 +301,28 @@ exprt state_encodingt::evaluate_expr_rec(
   else if(what.id() == ID_is_sentinel_dll)
   {
     // we need to add the state
-    const auto &is_sentinel_dll_expr = to_binary_expr(what);
-    auto head =
-      evaluate_expr_rec(loc, state, is_sentinel_dll_expr.op0(), bound_symbols);
-    auto tail =
-      evaluate_expr_rec(loc, state, is_sentinel_dll_expr.op1(), bound_symbols);
-    return state_is_sentinel_dll_exprt(state, head, tail);
+    if(what.operands().size() == 2)
+    {
+      const auto &is_sentinel_dll_expr = to_binary_expr(what);
+      auto head = evaluate_expr_rec(
+        loc, state, is_sentinel_dll_expr.op0(), bound_symbols);
+      auto tail = evaluate_expr_rec(
+        loc, state, is_sentinel_dll_expr.op1(), bound_symbols);
+      return state_is_sentinel_dll_exprt(state, head, tail);
+    }
+    else if(what.operands().size() == 3)
+    {
+      const auto &is_sentinel_dll_expr = to_ternary_expr(what);
+      auto head = evaluate_expr_rec(
+        loc, state, is_sentinel_dll_expr.op0(), bound_symbols);
+      auto tail = evaluate_expr_rec(
+        loc, state, is_sentinel_dll_expr.op1(), bound_symbols);
+      auto node = evaluate_expr_rec(
+        loc, state, is_sentinel_dll_expr.op2(), bound_symbols);
+      return state_is_sentinel_dll_exprt(state, head, tail, node);
+    }
+    else
+      DATA_INVARIANT(false, "is_sentinel_dll expressions have 2 or 3 operands");
   }
   else if(what.id() == ID_side_effect)
   {
