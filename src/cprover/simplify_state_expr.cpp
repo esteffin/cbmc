@@ -57,38 +57,41 @@ exprt simplify_evaluate_update(
     {
       // The object is known to be the same.
       // (ς[A:=V])(A) --> V
-      return typecast_exprt::conditional_cast(
-        update_state_expr.new_value(), evaluate_expr.type());
+      return simplify_state_expr_node(
+        typecast_exprt::conditional_cast(
+          update_state_expr.new_value(), evaluate_expr.type()),
+        address_taken,
+        ns);
     }
     else if(may_alias->is_false())
     {
       // The object is known to be different.
       // (ς[❝x❞:=V])(❝y❞) --> ς(❝y❞)
-      auto new_evaluate_expr = evaluate_expr;
-      new_evaluate_expr.state() = update_state_expr.state();
-      // It might be possible to further simplify ς(❝y❞)
+      // It might be possible to further simplify ς(❝y❞).
       return simplify_state_expr_node(
-        std::move(new_evaluate_expr), address_taken, ns);
+        evaluate_expr.with_state(update_state_expr.state()), address_taken, ns);
     }
     else
     {
       // The object may or may not be the same.
       // (ς[A:=V])(B) --> if cond then V else ς(B) endif
       auto simplified_cond = simplify_state_expr(*may_alias, address_taken, ns);
-      auto new_evaluate_expr = evaluate_expr;
-      new_evaluate_expr.state() = update_state_expr.state();
+      auto new_evaluate_expr =
+        evaluate_expr.with_state(update_state_expr.state());
       auto simplified_new_evaluate_expr = simplify_state_expr_node(
         new_evaluate_expr, address_taken, ns); // rec. call
       return if_exprt(
         std::move(simplified_cond),
-        typecast_exprt::conditional_cast(
-          update_state_expr.new_value(), evaluate_expr.type()),
+        simplify_state_expr_node(
+          typecast_exprt::conditional_cast(
+            update_state_expr.new_value(), evaluate_expr.type()),
+          address_taken,
+          ns),
         std::move(simplified_new_evaluate_expr));
     }
   }
 
-  auto new_evaluate_expr = evaluate_expr;
-  new_evaluate_expr.state() = update_state_expr.state();
+  auto new_evaluate_expr = evaluate_expr.with_state(update_state_expr.state());
   auto simplified_new_evaluate_expr =
     simplify_state_expr(new_evaluate_expr, address_taken, ns); // rec. call
 
@@ -121,7 +124,8 @@ exprt simplify_evaluate_update(
 
     auto same = and_exprt(simplified_same_object, same_offset);
 
-    auto simplified_same = simplify_expr(same, ns);
+    auto simplified_same =
+      simplify_state_expr(simplify_expr(same, ns), address_taken, ns);
 
     return if_exprt(
       simplified_same,
@@ -155,10 +159,9 @@ exprt simplify_allocate(allocate_exprt src)
   // allocate(ς[A:=V]), size) --> allocate(ς, size)
   if(src.state().id() == ID_update_state)
   {
-    src.state() = to_update_state_expr(src.state()).state();
-
     // rec. call
-    return simplify_allocate(std::move(src));
+    return simplify_allocate(
+      src.with_state(to_update_state_expr(src.state()).state()));
   }
 
   return std::move(src);
@@ -204,8 +207,8 @@ exprt simplify_evaluate_deallocate_state(
   // deallocate isn't visible to 'evaluate'
   const auto &deallocate_state_expr =
     to_deallocate_state_expr(evaluate_expr.state());
-  auto new_evaluate_expr = evaluate_expr;
-  new_evaluate_expr.state() = deallocate_state_expr.state();
+  auto new_evaluate_expr =
+    evaluate_expr.with_state(deallocate_state_expr.state());
   return std::move(new_evaluate_expr);
 }
 
@@ -215,6 +218,8 @@ exprt simplify_object_expression_rec(exprt src)
     return src;
   else if(src.id() == ID_element_address)
     return simplify_object_expression_rec(to_element_address_expr(src).base());
+  else if(src.id() == ID_field_address)
+    return simplify_object_expression_rec(to_field_address_expr(src).base());
   else if(src.id() == ID_plus)
   {
     const auto &plus_expr = to_plus_expr(src);
@@ -372,8 +377,7 @@ exprt simplify_object_size_expr(
   // object_size(ς[A:=V]), p) --> object_size(ς, p)
   if(src.state().id() == ID_update_state)
   {
-    src.state() = to_update_state_expr(src.state()).state();
-    return std::move(src);
+    return src.with_state(to_update_state_expr(src.state()).state());
   }
 
   return std::move(src);
@@ -587,7 +591,7 @@ exprt simplify_pointer_offset_expr(
         typecast_exprt::conditional_cast(
           element_address_expr.index(), src.type()),
         typecast_exprt::conditional_cast(*size_opt, src.type()));
-      auto pointer_offset = simplify_state_expr_node(
+      auto pointer_offset = simplify_pointer_offset_expr(
         pointer_offset_exprt(element_address_expr.base(), src.type()),
         address_taken,
         ns);
@@ -601,6 +605,17 @@ exprt simplify_pointer_offset_expr(
     if(address_of_expr.object().id() == ID_string_constant)
       return from_integer(0, src.type());
   }
+  else if(src.pointer().id() == ID_typecast)
+  {
+    if(to_typecast_expr(src.pointer()).op().type().id() == ID_pointer)
+    {
+      // remove the typecast
+      return simplify_pointer_offset_expr(
+        pointer_offset_exprt(to_typecast_expr(src.pointer()).op(), src.type()),
+        address_taken,
+        ns);
+    }
+  }
 
   return std::move(src);
 }
@@ -610,24 +625,10 @@ exprt simplify_pointer_object_expr(
   const std::unordered_set<symbol_exprt, irep_hash> &address_taken,
   const namespacet &ns)
 {
-  if(src.pointer().id() == ID_element_address)
-  {
-    const auto &element_address_expr = to_element_address_expr(src.pointer());
-    // pointer_object(element_address(p, y)) -> pointer_object(p)
-    return simplify_state_expr_node(
-      pointer_object_exprt(element_address_expr.base(), src.type()),
-      address_taken,
-      ns);
-  }
-  else if(src.pointer().id() == ID_field_address)
-  {
-    const auto &field_address_expr = to_field_address_expr(src.pointer());
-    // pointer_object(p.❝y❞) -> pointer_object(p)
-    return simplify_state_expr_node(
-      pointer_object_exprt(field_address_expr.base(), src.type()),
-      address_taken,
-      ns);
-  }
+  auto simplified_pointer = simplify_object_expression_rec(src.pointer());
+
+  if(src.pointer() != simplified_pointer)
+    return pointer_object_exprt(simplified_pointer, src.type());
 
   return std::move(src);
 }
@@ -703,7 +704,8 @@ exprt simplify_state_expr_node(
           plus_expr.op1(), new_element_address_expr.index().type()));
       new_element_address_expr.index() =
         simplify_expr(new_element_address_expr.index(), ns);
-      return std::move(new_element_address_expr);
+      return simplify_state_expr_node(
+        new_element_address_expr, address_taken, ns);
     }
   }
   else if(src.id() == ID_pointer_offset)

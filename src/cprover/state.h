@@ -67,6 +67,14 @@ public:
   {
     return op1();
   }
+
+  // helper
+  evaluate_exprt with_state(exprt state) const
+  {
+    auto result = *this; // copy
+    result.state() = std::move(state);
+    return result;
+  }
 };
 
 /// \brief Cast an exprt to a \ref evaluate_exprt
@@ -185,6 +193,14 @@ public:
   const exprt &size() const
   {
     return op1();
+  }
+
+  // helper
+  allocate_exprt with_state(exprt state) const
+  {
+    auto result = *this; // copy
+    result.state() = std::move(state);
+    return result;
   }
 };
 
@@ -634,6 +650,14 @@ public:
   const exprt &address() const
   {
     return op1();
+  }
+
+  // helper
+  state_object_size_exprt with_state(exprt state) const
+  {
+    auto result = *this; // copy
+    result.state() = std::move(state);
+    return result;
   }
 };
 
