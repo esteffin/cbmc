@@ -330,6 +330,34 @@ exprt state_encodingt::evaluate_expr_rec(
     // leave as is
     return what;
   }
+  else if(
+    (what.id() == ID_equal || what.id() == ID_notequal) &&
+    to_binary_relation_expr(what).lhs().type().id() == ID_struct_tag)
+  {
+    const auto &lhs = to_binary_relation_expr(what).lhs();
+    const auto &rhs = to_binary_relation_expr(what).rhs();
+
+    const auto &type = to_struct_tag_type(lhs.type());
+    const namespacet ns(goto_model.symbol_table);
+    const auto &struct_type = ns.follow_tag(type);
+
+    exprt::operandst conjuncts;
+
+    for(auto &field : struct_type.components())
+    {
+      exprt lhs_member = member_exprt(lhs, field.get_name(), field.type());
+      exprt rhs_member = member_exprt(rhs, field.get_name(), field.type());
+      auto equality = equal_exprt(lhs_member, rhs_member);
+      auto equality_evaluated =
+        evaluate_expr_rec(loc, state, equality, bound_symbols);
+      conjuncts.push_back(std::move(equality_evaluated));
+    }
+
+    if(what.id() == ID_equal)
+      return conjunction(conjuncts);
+    else
+      return not_exprt(conjunction(conjuncts));
+  }
   else
   {
     exprt tmp = what;
