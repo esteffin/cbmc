@@ -565,6 +565,73 @@ exprt simplify_is_sentinel_dll_expr(
   return std::move(src);
 }
 
+exprt simplify_pointer_offset_expr(
+  pointer_offset_exprt src,
+  const std::unordered_set<symbol_exprt, irep_hash> &address_taken,
+  const namespacet &ns)
+{
+  if(src.pointer().id() == ID_object_address)
+  {
+    // pointer_offset(❝x❞) -> 0
+    return from_integer(0, src.type());
+  }
+  else if(src.pointer().id() == ID_element_address)
+  {
+    const auto &element_address_expr = to_element_address_expr(src.pointer());
+    // pointer_offset(element_address(Z, y)) -->
+    //   pointer_offset(Z) + y*sizeof(x)
+    auto size_opt = size_of_expr(element_address_expr.element_type(), ns);
+    if(size_opt.has_value())
+    {
+      auto product = mult_exprt(
+        typecast_exprt::conditional_cast(
+          element_address_expr.index(), src.type()),
+        typecast_exprt::conditional_cast(*size_opt, src.type()));
+      auto pointer_offset = simplify_state_expr_node(
+        pointer_offset_exprt(element_address_expr.base(), src.type()),
+        address_taken,
+        ns);
+      auto sum = plus_exprt(pointer_offset, std::move(product));
+      return std::move(sum);
+    }
+  }
+  else if(src.pointer().id() == ID_address_of)
+  {
+    const auto &address_of_expr = to_address_of_expr(src.pointer());
+    if(address_of_expr.object().id() == ID_string_constant)
+      return from_integer(0, src.type());
+  }
+
+  return std::move(src);
+}
+
+exprt simplify_pointer_object_expr(
+  pointer_object_exprt src,
+  const std::unordered_set<symbol_exprt, irep_hash> &address_taken,
+  const namespacet &ns)
+{
+  if(src.pointer().id() == ID_element_address)
+  {
+    const auto &element_address_expr = to_element_address_expr(src.pointer());
+    // pointer_object(element_address(p, y)) -> pointer_object(p)
+    return simplify_state_expr_node(
+      pointer_object_exprt(element_address_expr.base(), src.type()),
+      address_taken,
+      ns);
+  }
+  else if(src.pointer().id() == ID_field_address)
+  {
+    const auto &field_address_expr = to_field_address_expr(src.pointer());
+    // pointer_object(p.❝y❞) -> pointer_object(p)
+    return simplify_state_expr_node(
+      pointer_object_exprt(field_address_expr.base(), src.type()),
+      address_taken,
+      ns);
+  }
+
+  return std::move(src);
+}
+
 exprt simplify_state_expr_node(
   exprt src,
   const std::unordered_set<symbol_exprt, irep_hash> &address_taken,
@@ -641,60 +708,13 @@ exprt simplify_state_expr_node(
   }
   else if(src.id() == ID_pointer_offset)
   {
-    auto &pointer_offset_expr = to_pointer_offset_expr(src);
-
-    if(pointer_offset_expr.pointer().id() == ID_object_address)
-    {
-      // pointer_offset(❝x❞) -> 0
-      return from_integer(0, pointer_offset_expr.type());
-    }
-    else if(pointer_offset_expr.pointer().id() == ID_element_address)
-    {
-      const auto &element_address_expr =
-        to_element_address_expr(pointer_offset_expr.pointer());
-      // pointer_offset(element_address(Z, y)) -->
-      //   pointer_offset(Z) + y*sizeof(x)
-      auto size_opt = size_of_expr(element_address_expr.element_type(), ns);
-      if(size_opt.has_value())
-      {
-        auto product = mult_exprt(
-          typecast_exprt::conditional_cast(
-            element_address_expr.index(), src.type()),
-          typecast_exprt::conditional_cast(*size_opt, src.type()));
-        auto pointer_offset = simplify_state_expr_node(
-          pointer_offset_exprt(
-          element_address_expr.base(), pointer_offset_expr.type()),
-          address_taken, ns);
-        auto sum = plus_exprt(pointer_offset, std::move(product));
-        return std::move(sum);
-      }
-    }
-    else if(pointer_offset_expr.pointer().id() == ID_address_of)
-    {
-      const auto &address_of_expr =
-        to_address_of_expr(pointer_offset_expr.pointer());
-      if(address_of_expr.object().id() == ID_string_constant)
-        return from_integer(0, pointer_offset_expr.type());
-    }
+    return simplify_pointer_offset_expr(
+      to_pointer_offset_expr(src), address_taken, ns);
   }
   else if(src.id() == ID_pointer_object)
   {
-    auto &pointer_object_expr = to_pointer_object_expr(src);
-
-    if(pointer_object_expr.pointer().id() == ID_element_address)
-    {
-      const auto &element_address_expr =
-        to_element_address_expr(pointer_object_expr.pointer());
-      // pointer_object(element_address(p, y)) -> pointer_object(p)
-      return simplify_state_expr_node(pointer_object_exprt(element_address_expr.base(), src.type()), address_taken, ns);
-    }
-    else if(pointer_object_expr.pointer().id() == ID_field_address)
-    {
-      const auto &field_address_expr =
-        to_field_address_expr(pointer_object_expr.pointer());
-      // pointer_object(p.❝y❞) -> pointer_object(p)
-      return simplify_state_expr_node(pointer_object_exprt(field_address_expr.base(), src.type()), address_taken, ns);
-    }
+    return simplify_pointer_object_expr(
+      to_pointer_object_expr(src), address_taken, ns);
   }
   else if(src.id() == ID_state_object_size)
   {
