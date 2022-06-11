@@ -245,7 +245,10 @@ exprt simplify_object_expression(exprt src)
   return simplify_object_expression_rec(src);
 }
 
-exprt simplify_live_object_expr(state_live_object_exprt src, const namespacet &ns)
+exprt simplify_live_object_expr(
+  state_live_object_exprt src,
+  const std::unordered_set<symbol_exprt, irep_hash> &address_taken,
+  const namespacet &ns)
 {
   const auto &pointer = src.address();
 
@@ -288,7 +291,20 @@ exprt simplify_live_object_expr(state_live_object_exprt src, const namespacet &n
     src.state() = to_update_state_expr(src.state()).state();
 
     // rec. call
-    return simplify_live_object_expr(std::move(src), ns);
+    return simplify_live_object_expr(std::move(src), address_taken, ns);
+  }
+  else if(src.state().id() == ID_deallocate_state)
+  {
+    const auto &deallocate_state_expr = to_deallocate_state_expr(src.state());
+    // live_object(deallocate_state(ς, p), q) -->
+    //   IF same_object(p, q) THEN false ELSE live_object(ς, q) ENDIF
+    auto same_object = ::same_object(object, deallocate_state_expr.address());
+    auto simplified_same_object =
+      simplify_state_expr(same_object, address_taken, ns);
+    auto new_live_object_expr = simplify_live_object_expr(
+      src.with_state(deallocate_state_expr.state()), address_taken, ns);
+    return if_exprt(
+      simplified_same_object, false_exprt(), new_live_object_expr);
   }
 
   return std::move(src);
@@ -667,7 +683,8 @@ exprt simplify_state_expr_node(
   }
   else if(src.id() == ID_state_live_object)
   {
-    return simplify_live_object_expr(to_state_live_object_expr(src), ns);
+    return simplify_live_object_expr(
+      to_state_live_object_expr(src), address_taken, ns);
   }
   else if(src.id() == ID_state_writeable_object)
   {

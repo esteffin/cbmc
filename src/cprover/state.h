@@ -432,6 +432,14 @@ public:
   {
     return op1();
   }
+
+  // helper
+  state_live_object_exprt with_state(exprt state) const
+  {
+    auto result = *this; // copy
+    result.state() = std::move(state);
+    return result;
+  }
 };
 
 /// \brief Cast an exprt to a \ref state_live_object_exprt
