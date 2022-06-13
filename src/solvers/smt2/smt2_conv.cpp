@@ -1676,6 +1676,31 @@ void smt2_convt::convert_expr(const exprt &expr)
     convert_expr(to_binary_expr(expr).op1());
     out << ')';
   }
+  else if(expr.id() == ID_state_is_sentinel_dll)
+  {
+    if(expr.operands().size() == 3)
+    {
+      out << "(state-is-sentinel-dll ";
+      convert_expr(to_multi_ary_expr(expr).op0());
+      out << ' ';
+      convert_expr(to_multi_ary_expr(expr).op1());
+      out << ' ';
+      convert_expr(to_multi_ary_expr(expr).op2());
+      out << ')';
+    }
+    else
+    {
+      out << "(state-is-sentinel-dll-with-node ";
+      convert_expr(to_multi_ary_expr(expr).op0());
+      out << ' ';
+      convert_expr(to_multi_ary_expr(expr).op1());
+      out << ' ';
+      convert_expr(to_multi_ary_expr(expr).op2());
+      out << ' ';
+      convert_expr(to_multi_ary_expr(expr).op3());
+      out << ')';
+    }
+  }
   else if(expr.id() == ID_state_live_object)
   {
     out << "(state-live-object ";
