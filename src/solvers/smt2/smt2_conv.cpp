@@ -1595,6 +1595,29 @@ void smt2_convt::convert_expr(const exprt &expr)
     convert_expr(to_ternary_expr(expr).op2());
     out << ')';
   }
+  else if(expr.id() == ID_enter_scope_state)
+  {
+    out << "(enter-scope-state " << type2id(to_binary_expr(expr).op1().type())
+        << ' ';
+    convert_expr(to_binary_expr(expr).op0());
+    out << ' ';
+    convert_expr(to_binary_expr(expr).op1());
+    out << ' ';
+    auto size_opt = size_of_expr(
+      to_pointer_type(to_binary_expr(expr).op1().type()).base_type(), ns);
+    CHECK_RETURN(size_opt.has_value());
+    convert_expr(*size_opt);
+    out << ')';
+  }
+  else if(expr.id() == ID_exit_scope_state)
+  {
+    out << "(exit-scope-state " << type2id(to_binary_expr(expr).op1().type())
+        << ' ';
+    convert_expr(to_binary_expr(expr).op0());
+    out << ' ';
+    convert_expr(to_binary_expr(expr).op1());
+    out << ')';
+  }
   else if(expr.id() == ID_allocate)
   {
     out << "(allocate ";
@@ -5171,6 +5194,40 @@ void smt2_convt::find_symbols(const exprt &expr)
       convert_type(to_multi_ary_expr(expr).op1().type());
       out << ' ';
       convert_type(to_multi_ary_expr(expr).op2().type());
+      out << ") ";
+      convert_type(expr.type()); // return type
+      out << ")\n";              // declare-fun
+    }
+  }
+  else if(expr.id() == ID_enter_scope_state)
+  {
+    irep_idt function =
+      "enter-scope-state-" + type2id(to_binary_expr(expr).op1().type());
+
+    if(state_fkt_declared.insert(function).second)
+    {
+      out << "(declare-fun " << function << " (";
+      convert_type(to_binary_expr(expr).op0().type());
+      out << ' ';
+      convert_type(to_binary_expr(expr).op1().type());
+      out << ' ';
+      convert_type(size_type());
+      out << ") ";
+      convert_type(expr.type()); // return type
+      out << ")\n";              // declare-fun
+    }
+  }
+  else if(expr.id() == ID_exit_scope_state)
+  {
+    irep_idt function =
+      "exit-scope-state-" + type2id(to_binary_expr(expr).op1().type());
+
+    if(state_fkt_declared.insert(function).second)
+    {
+      out << "(declare-fun " << function << " (";
+      convert_type(to_binary_expr(expr).op0().type());
+      out << ' ';
+      convert_type(to_binary_expr(expr).op1().type());
       out << ") ";
       convert_type(expr.type()); // return type
       out << ")\n";              // declare-fun

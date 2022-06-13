@@ -1043,10 +1043,22 @@ void state_encodingt::encode(
         dest << equal_exprt(out_state_expr(loc), in_state_expr(loc));
       }
     }
-    else if(loc->is_decl() || loc->is_dead())
+    else if(loc->is_decl())
     {
-      // may wish to havoc the symbol
-      dest << equal_exprt(out_state_expr(loc), in_state_expr(loc));
+      auto s_in = state_expr();
+      auto s_out = enter_scope_state_exprt(
+        s_in, address_rec(loc, s_in, loc->decl_symbol()));
+      dest << forall_states_expr(
+        loc, function_application_exprt(out_state_expr(loc), {s_out}));
+    }
+    else if(loc->is_dead())
+    {
+      auto s = state_expr();
+      auto s_in = state_expr();
+      auto s_out = exit_scope_state_exprt(
+        s_in, address_rec(loc, s_in, loc->dead_symbol()));
+      dest << forall_states_expr(
+        loc, function_application_exprt(out_state_expr(loc), {s_out}));
     }
     else if(loc->is_function_call())
     {

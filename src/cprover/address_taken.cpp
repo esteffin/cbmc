@@ -17,6 +17,8 @@ Author:
 
 // we look for ❝x❞ that's
 // * not the argument of ς(...), i.e., evaluate
+// * not the argument of enter_scope_state(?, ?)
+// * not the argument of exit_scope_state(?, ?)
 // * not on the lhs of [...:=...]
 static void find_objects_rec(
   const exprt &src,
@@ -25,6 +27,12 @@ static void find_objects_rec(
   if(src.id() == ID_object_address)
     result.insert(to_object_address_expr(src).object_expr());
   else if(src.id() == ID_evaluate)
+  {
+  }
+  else if(src.id() == ID_enter_scope_state)
+  {
+  }
+  else if(src.id() == ID_exit_scope_state)
   {
   }
   else if(src.id() == ID_update_state)

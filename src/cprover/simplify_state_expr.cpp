@@ -163,6 +163,18 @@ exprt simplify_allocate(allocate_exprt src)
     return simplify_allocate(
       src.with_state(to_update_state_expr(src.state()).state()));
   }
+  else if(src.state().id() == ID_enter_scope_state)
+  {
+    // rec. call
+    return simplify_allocate(
+      src.with_state(to_enter_scope_state_expr(src.state()).state()));
+  }
+  else if(src.state().id() == ID_exit_scope_state)
+  {
+    // rec. call
+    return simplify_allocate(
+      src.with_state(to_exit_scope_state_expr(src.state()).state()));
+  }
 
   return std::move(src);
 }
@@ -209,6 +221,32 @@ exprt simplify_evaluate_deallocate_state(
     to_deallocate_state_expr(evaluate_expr.state());
   auto new_evaluate_expr =
     evaluate_expr.with_state(deallocate_state_expr.state());
+  return std::move(new_evaluate_expr);
+}
+
+exprt simplify_evaluate_enter_scope_state(
+  evaluate_exprt evaluate_expr,
+  const namespacet &ns)
+{
+  PRECONDITION(evaluate_expr.state().id() == ID_enter_scope_state);
+
+  const auto &enter_scope_state_expr =
+    to_enter_scope_state_expr(evaluate_expr.state());
+  auto new_evaluate_expr =
+    evaluate_expr.with_state(enter_scope_state_expr.state());
+  return std::move(new_evaluate_expr);
+}
+
+exprt simplify_evaluate_exit_scope_state(
+  evaluate_exprt evaluate_expr,
+  const namespacet &ns)
+{
+  PRECONDITION(evaluate_expr.state().id() == ID_exit_scope_state);
+
+  const auto &exit_scope_state_expr =
+    to_exit_scope_state_expr(evaluate_expr.state());
+  auto new_evaluate_expr =
+    evaluate_expr.with_state(exit_scope_state_expr.state());
   return std::move(new_evaluate_expr);
 }
 
@@ -306,6 +344,22 @@ exprt simplify_live_object_expr(
     return if_exprt(
       simplified_same_object, false_exprt(), new_live_object_expr);
   }
+  else if(src.state().id() == ID_enter_scope_state)
+  {
+    // rec. call
+    return simplify_live_object_expr(
+      src.with_state(to_enter_scope_state_expr(src.state()).state()),
+      address_taken,
+      ns);
+  }
+  else if(src.state().id() == ID_exit_scope_state)
+  {
+    // rec. call
+    return simplify_live_object_expr(
+      src.with_state(to_exit_scope_state_expr(src.state()).state()),
+      address_taken,
+      ns);
+  }
 
   return std::move(src);
 }
@@ -367,6 +421,16 @@ exprt simplify_is_dynamic_object_expr(state_is_dynamic_object_exprt src)
     // rec. call
     return simplify_is_dynamic_object_expr(std::move(src));
   }
+  else if(src.state().id() == ID_enter_scope_state)
+  {
+    return simplify_is_dynamic_object_expr(
+      src.with_state(to_enter_scope_state_expr(src.state()).state()));
+  }
+  else if(src.state().id() == ID_exit_scope_state)
+  {
+    return simplify_is_dynamic_object_expr(
+      src.with_state(to_exit_scope_state_expr(src.state()).state()));
+  }
 
   return std::move(src);
 }
@@ -400,7 +464,7 @@ exprt simplify_object_size_expr(
 }
 
 exprt simplify_ok_expr(
-  ternary_exprt src,
+  state_ok_exprt src,
   const std::unordered_set<symbol_exprt, irep_hash> &address_taken,
   const namespacet &ns)
 {
@@ -439,6 +503,22 @@ exprt simplify_ok_expr(
 
     // rec. call
     return simplify_state_expr_node(std::move(src), address_taken, ns);
+  }
+  else if(state.id() == ID_enter_scope_state)
+  {
+    // rec. call
+    return simplify_state_expr_node(
+      src.with_state(to_enter_scope_state_expr(state).state()),
+      address_taken,
+      ns);
+  }
+  else if(state.id() == ID_exit_scope_state)
+  {
+    // rec. call
+    return simplify_state_expr_node(
+      src.with_state(to_exit_scope_state_expr(state).state()),
+      address_taken,
+      ns);
   }
 
   return std::move(src);
@@ -501,6 +581,22 @@ exprt simplify_is_cstring_expr(
       return if_exprt(
         simplified_same_object, true_exprt(), simplified_cstring_in_old_state);
     }
+  }
+  else if(state.id() == ID_enter_scope_state)
+  {
+    // rec. call
+    return simplify_is_cstring_expr(
+      src.with_state(to_enter_scope_state_expr(state).state()),
+      address_taken,
+      ns);
+  }
+  else if(state.id() == ID_exit_scope_state)
+  {
+    // rec. call
+    return simplify_is_cstring_expr(
+      src.with_state(to_exit_scope_state_expr(state).state()),
+      address_taken,
+      ns);
   }
 
   if(pointer.id() == ID_plus)
@@ -580,6 +676,20 @@ exprt simplify_is_sentinel_dll_expr(
       auto without_update = src.with_state(update_state_expr.state());
       return simplify_is_sentinel_dll_expr(without_update, address_taken, ns);
     }
+  }
+  else if(state.id() == ID_enter_scope_state)
+  {
+    return simplify_is_sentinel_dll_expr(
+      src.with_state(to_enter_scope_state_expr(state).state()),
+      address_taken,
+      ns);
+  }
+  else if(state.id() == ID_exit_scope_state)
+  {
+    return simplify_is_sentinel_dll_expr(
+      src.with_state(to_exit_scope_state_expr(state).state()),
+      address_taken,
+      ns);
   }
 
   return std::move(src);
@@ -674,12 +784,20 @@ exprt simplify_state_expr_node(
     {
       return simplify_evaluate_deallocate_state(evaluate_expr, ns);
     }
+    else if(evaluate_expr.state().id() == ID_enter_scope_state)
+    {
+      return simplify_evaluate_enter_scope_state(evaluate_expr, ns);
+    }
+    else if(evaluate_expr.state().id() == ID_exit_scope_state)
+    {
+      return simplify_evaluate_exit_scope_state(evaluate_expr, ns);
+    }
   }
   else if(
     src.id() == ID_state_r_ok || src.id() == ID_state_w_ok ||
     src.id() == ID_state_rw_ok)
   {
-    return simplify_ok_expr(to_ternary_expr(src), address_taken, ns);
+    return simplify_ok_expr(to_state_ok_expr(src), address_taken, ns);
   }
   else if(src.id() == ID_state_live_object)
   {

@@ -549,6 +549,14 @@ public:
   {
     return op1();
   }
+
+  // helper
+  state_is_cstring_exprt with_state(exprt state) const
+  {
+    auto result = *this; // copy
+    result.state() = std::move(state);
+    return result;
+  }
 };
 
 /// \brief Cast an exprt to a \ref state_is_cstring_exprt
@@ -601,6 +609,14 @@ public:
   const exprt &address() const
   {
     return op1();
+  }
+
+  // helper
+  state_is_dynamic_object_exprt with_state(exprt state) const
+  {
+    auto result = *this; // copy
+    result.state() = std::move(state);
+    return result;
   }
 };
 
@@ -738,6 +754,14 @@ public:
   {
     return op2();
   }
+
+  // helper
+  state_ok_exprt with_state(exprt state) const
+  {
+    auto result = *this; // copy
+    result.state() = std::move(state);
+    return result;
+  }
 };
 
 /// \brief Cast an exprt to a \ref state_ok_exprt
@@ -763,6 +787,149 @@ inline state_ok_exprt &to_state_ok_expr(exprt &expr)
     expr.id() == ID_state_r_ok || expr.id() == ID_state_w_ok ||
     expr.id() == ID_state_rw_ok);
   state_ok_exprt &ret = static_cast<state_ok_exprt &>(expr);
+  validate_expr(ret);
+  return ret;
+}
+
+class enter_scope_state_exprt : public binary_exprt
+{
+public:
+  enter_scope_state_exprt(exprt state, exprt address)
+    : binary_exprt(
+        std::move(state),
+        ID_enter_scope_state,
+        std::move(address),
+        state_typet())
+  {
+    PRECONDITION(this->state().type().id() == ID_state);
+    PRECONDITION(this->address().type().id() == ID_pointer);
+  }
+
+  const exprt &state() const
+  {
+    return op0();
+  }
+
+  exprt &state()
+  {
+    return op0();
+  }
+
+  const exprt &address() const
+  {
+    return op1();
+  }
+
+  exprt &address()
+  {
+    return op1();
+  }
+
+#if 0
+  const exprt &size() const
+  {
+    return op2();
+  }
+
+  exprt &size()
+  {
+    return op2();
+  }
+#endif
+};
+
+/// \brief Cast an exprt to a \ref enter_scope_state_exprt
+///
+/// \a expr must be known to be \ref enter_scope_state_exprt.
+///
+/// \param expr: Source expression
+/// \return Object of type \ref enter_scope_state_exprt
+inline const enter_scope_state_exprt &
+to_enter_scope_state_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_enter_scope_state);
+  const enter_scope_state_exprt &ret =
+    static_cast<const enter_scope_state_exprt &>(expr);
+  validate_expr(ret);
+  return ret;
+}
+
+/// \copydoc to_enter_scope_state_expr(const exprt &)
+inline enter_scope_state_exprt &to_enter_scope_state_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_enter_scope_state);
+  enter_scope_state_exprt &ret = static_cast<enter_scope_state_exprt &>(expr);
+  validate_expr(ret);
+  return ret;
+}
+
+class exit_scope_state_exprt : public binary_exprt
+{
+public:
+  exit_scope_state_exprt(exprt state, exprt address)
+    : binary_exprt(
+        std::move(state),
+        ID_exit_scope_state,
+        std::move(address),
+        state_typet())
+  {
+    PRECONDITION(this->state().type().id() == ID_state);
+    PRECONDITION(this->address().type().id() == ID_pointer);
+  }
+
+  const exprt &state() const
+  {
+    return op0();
+  }
+
+  exprt &state()
+  {
+    return op0();
+  }
+
+  const exprt &address() const
+  {
+    return op1();
+  }
+
+  exprt &address()
+  {
+    return op1();
+  }
+
+#if 0
+  const exprt &size() const
+  {
+    return op2();
+  }
+
+  exprt &size()
+  {
+    return op2();
+  }
+#endif
+};
+
+/// \brief Cast an exprt to a \ref exit_scope_state_exprt
+///
+/// \a expr must be known to be \ref exit_scope_state_exprt.
+///
+/// \param expr: Source expression
+/// \return Object of type \ref exit_scope_state_exprt
+inline const exit_scope_state_exprt &to_exit_scope_state_expr(const exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_exit_scope_state);
+  const exit_scope_state_exprt &ret =
+    static_cast<const exit_scope_state_exprt &>(expr);
+  validate_expr(ret);
+  return ret;
+}
+
+/// \copydoc to_exit_scope_state_expr(const exprt &)
+inline exit_scope_state_exprt &to_exit_scope_state_expr(exprt &expr)
+{
+  PRECONDITION(expr.id() == ID_exit_scope_state);
+  exit_scope_state_exprt &ret = static_cast<exit_scope_state_exprt &>(expr);
   validate_expr(ret);
   return ret;
 }
