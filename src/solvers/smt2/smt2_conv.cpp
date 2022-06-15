@@ -1597,7 +1597,7 @@ void smt2_convt::convert_expr(const exprt &expr)
   }
   else if(expr.id() == ID_enter_scope_state)
   {
-    out << "(enter-scope-state " << type2id(to_binary_expr(expr).op1().type())
+    out << "(enter-scope-state-" << type2id(to_binary_expr(expr).op1().type())
         << ' ';
     convert_expr(to_binary_expr(expr).op0());
     out << ' ';
@@ -1611,7 +1611,7 @@ void smt2_convt::convert_expr(const exprt &expr)
   }
   else if(expr.id() == ID_exit_scope_state)
   {
-    out << "(exit-scope-state " << type2id(to_binary_expr(expr).op1().type())
+    out << "(exit-scope-state-" << type2id(to_binary_expr(expr).op1().type())
         << ' ';
     convert_expr(to_binary_expr(expr).op0());
     out << ' ';
