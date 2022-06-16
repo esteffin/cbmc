@@ -70,15 +70,27 @@ operator<<(encoding_targett &target, const container_encoding_targett &src)
     target << constraint;
 }
 
+class state_encoding_smt2_convt : public smt2_convt
+{
+public:
+  state_encoding_smt2_convt(const namespacet &ns, std::ostream &_out)
+    : smt2_convt(ns, "", "cprover", "", smt2_convt::solvert::GENERIC, _out)
+
+  {
+    use_array_of_bool = true;
+    use_as_const = true;
+    add_converters();
+  }
+
+  void add_converters();
+};
+
 class smt2_encoding_targett : public encoding_targett
 {
 public:
   smt2_encoding_targett(const namespacet &ns, std::ostream &_out)
-    : out(_out),
-      smt2_conv(ns, "", "cprover", "", smt2_convt::solvert::GENERIC, _out)
+    : out(_out), smt2_conv(ns, _out)
   {
-    smt2_conv.use_array_of_bool = true;
-    smt2_conv.use_as_const = true;
   }
 
   ~smt2_encoding_targett()
@@ -102,7 +114,9 @@ public:
 
 protected:
   std::ostream &out;
-  smt2_convt smt2_conv;
+  state_encoding_smt2_convt smt2_conv;
+
+  void add_converters();
 };
 
 class ascii_encoding_targett : public encoding_targett
