@@ -1,8 +1,7 @@
-KNOWNBUG
+CORE
 pointer_to_pointer1.c
---safety
+
 ^EXIT=0$
 ^SIGNAL=0$
+^\[main\.assertion\.1\] line \d+ property 1: SUCCESS$
 --
-^\[main\.pointer\.1\] line \d+ pointer q safe: SUCCESS$
-^\[main\.free\.1\] line \d+ free argument must be valid dynamic object: SUCCESS$

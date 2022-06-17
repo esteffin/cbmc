@@ -1,12 +1,13 @@
 #include <stdlib.h>
 
-int *p;
+int *p, *q;
 void **p_ptr;
 
 int main()
 {
   p = malloc(1);
   p_ptr = &p;
-  __CPROVER_assert(__CPROVER_LIVE_OBJECT(*p_ptr), "property 1");
+  q = malloc(2);
+  free(*p_ptr);
   return 0;
 }

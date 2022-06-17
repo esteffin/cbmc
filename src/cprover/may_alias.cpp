@@ -38,6 +38,12 @@ bool permitted_by_strict_aliasing(const typet &a, const typet &b)
     // signed/unsigned of same width can alias
     return to_bitvector_type(a).get_width() == to_bitvector_type(b).get_width();
   }
+  else if(
+    a.id() == ID_pointer && to_pointer_type(a).base_type().id() == ID_empty)
+    return true; // void * can alias any pointer
+  else if(
+    b.id() == ID_pointer && to_pointer_type(b).base_type().id() == ID_empty)
+    return true; // void * can alias any pointer
   else
   {
     return false;

@@ -38,6 +38,16 @@ exprt simplify_state_expr_node(
   const std::unordered_set<symbol_exprt, irep_hash> &address_taken,
   const namespacet &);
 
+static bool types_are_compatible(const typet &a, const typet &b)
+{
+  if(a == b)
+    return true;
+  else if(a.id() == ID_pointer && b.id() == ID_pointer)
+    return true;
+  else
+    return false;
+}
+
 exprt simplify_evaluate_update(
   evaluate_exprt evaluate_expr,
   const std::unordered_set<symbol_exprt, irep_hash> &address_taken,
@@ -95,8 +105,9 @@ exprt simplify_evaluate_update(
   auto simplified_new_evaluate_expr =
     simplify_state_expr(new_evaluate_expr, address_taken, ns); // rec. call
 
-  // Types match?
-  if(update_state_expr.new_value().type() == evaluate_expr.type())
+  // Types are compatible?
+  if(types_are_compatible(
+       update_state_expr.new_value().type(), evaluate_expr.type()))
   {
     // Disregard case where the two memory regions overlap.
     //
@@ -127,10 +138,10 @@ exprt simplify_evaluate_update(
     auto simplified_same =
       simplify_state_expr(simplify_expr(same, ns), address_taken, ns);
 
-    return if_exprt(
-      simplified_same,
-      update_state_expr.new_value(),
-      simplified_new_evaluate_expr);
+    auto new_value = typecast_exprt::conditional_cast(
+      update_state_expr.new_value(), evaluate_expr.type());
+
+    return if_exprt(simplified_same, new_value, simplified_new_evaluate_expr);
   }
   else
   {
