@@ -825,6 +825,12 @@ public:
     return op1();
   }
 
+  symbol_exprt symbol() const
+  {
+    PRECONDITION(address().id() == ID_object_address);
+    return to_object_address_expr(address()).object_expr();
+  }
+
 #if 0
   const exprt &size() const
   {
@@ -895,6 +901,12 @@ public:
   exprt &address()
   {
     return op1();
+  }
+
+  symbol_exprt symbol() const
+  {
+    PRECONDITION(address().id() == ID_object_address);
+    return to_object_address_expr(address()).object_expr();
   }
 
 #if 0

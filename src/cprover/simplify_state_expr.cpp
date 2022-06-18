@@ -359,32 +359,57 @@ exprt simplify_live_object_expr(
   {
     // This begins the life of a local-scoped variable.
     const auto &enter_scope_state_expr = to_enter_scope_state_expr(src.state());
-    // live_object(enter_scope_state(ς, p), q) -->
-    //   IF same_object(p, q) THEN true ELSE live_object(ς, q) ENDIF
-    auto same_object = ::same_object(object, enter_scope_state_expr.address());
-    auto simplified_same_object =
-      simplify_state_expr(same_object, address_taken, ns);
-    auto new_live_object_expr = simplify_live_object_expr( // rec. call
-      src.with_state(enter_scope_state_expr.state()),
-      address_taken,
-      ns);
-    return if_exprt(simplified_same_object, true_exprt(), new_live_object_expr);
+    if(
+      address_taken.find(enter_scope_state_expr.symbol()) !=
+      address_taken.end())
+    {
+      // live_object(enter_scope_state(ς, p), q) -->
+      //   IF same_object(p, q) THEN true ELSE live_object(ς, q) ENDIF
+      auto same_object =
+        ::same_object(object, enter_scope_state_expr.address());
+      auto simplified_same_object =
+        simplify_state_expr(same_object, address_taken, ns);
+      auto new_live_object_expr = simplify_live_object_expr( // rec. call
+        src.with_state(enter_scope_state_expr.state()),
+        address_taken,
+        ns);
+      return if_exprt(
+        simplified_same_object, true_exprt(), new_live_object_expr);
+    }
+    else
+    {
+      return simplify_live_object_expr( // rec. call
+        src.with_state(enter_scope_state_expr.state()),
+        address_taken,
+        ns);
+    }
   }
   else if(src.state().id() == ID_exit_scope_state)
   {
     // This ends the life of a local-scoped variable.
     const auto &exit_scope_state_expr = to_exit_scope_state_expr(src.state());
-    // live_object(exit_scope_state(ς, p), q) -->
-    //   IF same_object(p, q) THEN false ELSE live_object(ς, q) ENDIF
-    auto same_object = ::same_object(object, exit_scope_state_expr.address());
-    auto simplified_same_object =
-      simplify_state_expr(same_object, address_taken, ns);
-    auto new_live_object_expr = simplify_live_object_expr( // rec. call
-      src.with_state(exit_scope_state_expr.state()),
-      address_taken,
-      ns);
-    return if_exprt(
-      simplified_same_object, false_exprt(), new_live_object_expr);
+    if(
+      address_taken.find(exit_scope_state_expr.symbol()) != address_taken.end())
+    {
+      // live_object(exit_scope_state(ς, p), q) -->
+      //   IF same_object(p, q) THEN false ELSE live_object(ς, q) ENDIF
+      auto same_object = ::same_object(object, exit_scope_state_expr.address());
+      auto simplified_same_object =
+        simplify_state_expr(same_object, address_taken, ns);
+      auto new_live_object_expr = simplify_live_object_expr( // rec. call
+        src.with_state(exit_scope_state_expr.state()),
+        address_taken,
+        ns);
+      return if_exprt(
+        simplified_same_object, false_exprt(), new_live_object_expr);
+    }
+    else
+    {
+      return simplify_live_object_expr( // rec. call
+        src.with_state(exit_scope_state_expr.state()),
+        address_taken,
+        ns);
+    }
   }
 
   return std::move(src);
