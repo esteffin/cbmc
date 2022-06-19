@@ -113,6 +113,9 @@ public:
   {
     PRECONDITION(this->state().type().id() == ID_state);
     PRECONDITION(this->address().type().id() == ID_pointer);
+    PRECONDITION(
+      to_pointer_type(this->address().type()).base_type() ==
+      this->new_value().type());
   }
 
   const exprt &state() const

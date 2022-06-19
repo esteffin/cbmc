@@ -646,7 +646,7 @@ void state_encodingt::function_call_symbol(
     auto size_evaluated = evaluate_expr(loc, state, loc->call_arguments()[0]);
 
     auto lhs_address = address_rec(loc, state, loc->call_lhs());
-    auto lhs_type = to_pointer_type(lhs_address.type());
+    auto lhs_type = to_pointer_type(loc->call_lhs().type());
     exprt new_state = update_state_exprt(
       state, lhs_address, allocate_exprt(state, size_evaluated, lhs_type));
     dest << forall_states_expr(
@@ -662,7 +662,8 @@ void state_encodingt::function_call_symbol(
     PRECONDITION(loc->call_arguments().size() == 3);
     auto memptr_evaluated = evaluate_expr(loc, state, loc->call_arguments()[0]);
     auto size_evaluated = evaluate_expr(loc, state, loc->call_arguments()[2]);
-    auto lhs_type = pointer_type(empty_typet());
+    auto lhs_type =
+      to_pointer_type(to_pointer_type(memptr_evaluated.type()).base_type());
     exprt new_state = update_state_exprt(
       state, memptr_evaluated, allocate_exprt(state, size_evaluated, lhs_type));
     dest << forall_states_expr(
@@ -680,7 +681,7 @@ void state_encodingt::function_call_symbol(
     auto size_evaluated = evaluate_expr(loc, state, loc->call_arguments()[1]);
 
     auto lhs_address = address_rec(loc, state, loc->call_lhs());
-    auto lhs_type = to_pointer_type(lhs_address.type());
+    auto lhs_type = to_pointer_type(loc->call_lhs().type());
     exprt new_state = update_state_exprt(
       state,
       lhs_address,
