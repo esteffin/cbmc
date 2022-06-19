@@ -28,11 +28,6 @@ TEST_CASE("find_object_base_expression", "[core][smt2_incremental]")
       "Address of struct member",
       {member_exprt{object_base, "baz", unsignedbv_typet{8}}, pointer_type}},
     rowt{
-      "Address of index of struct member",
-      {index_exprt{
-         member_exprt{object_base, "baz", unsignedbv_typet{8}}, index},
-       pointer_type}},
-    rowt{
       "Address of struct member at index",
       {member_exprt{
          index_exprt{object_base, index}, "baz", unsignedbv_typet{8}},
