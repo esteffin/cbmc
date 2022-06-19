@@ -757,6 +757,7 @@ void state_encodingt::function_call_symbol(
     if(arguments.size() > type.parameters().size())
     {
       std::vector<exprt> va_args_elements;
+      auto void_ptr = pointer_type(empty_typet());
 
       for(std::size_t i = type.parameters().size(); i < arguments.size(); i++)
       {
@@ -767,8 +768,8 @@ void state_encodingt::function_call_symbol(
         auto address =
           object_address_exprt(symbol_exprt(id, arguments[i].type()));
         auto value = evaluate_expr(loc, state_expr(), arguments[i]);
-        va_args_elements.push_back(typecast_exprt::conditional_cast(
-          address, pointer_type(empty_typet())));
+        va_args_elements.push_back(
+          typecast_exprt::conditional_cast(address, void_ptr));
         arguments_state = update_state_exprt(arguments_state, address, value);
       }
 
@@ -784,7 +785,8 @@ void state_encodingt::function_call_symbol(
       {
         auto address = element_address_exprt(
           object_address_exprt(array_symbol),
-          from_integer(i, array_type.index_type()));
+          from_integer(i, array_type.index_type()),
+          pointer_type(void_ptr));
         auto value = va_args_elements[i];
         arguments_state = update_state_exprt(arguments_state, address, value);
       }
@@ -793,7 +795,8 @@ void state_encodingt::function_call_symbol(
       auto address = object_address_exprt(va_args(identifier));
       auto value = element_address_exprt(
         object_address_exprt(array_symbol),
-        from_integer(0, array_type.index_type()));
+        from_integer(0, array_type.index_type()),
+        pointer_type(void_ptr));
       arguments_state = update_state_exprt(arguments_state, address, value);
     }
 
