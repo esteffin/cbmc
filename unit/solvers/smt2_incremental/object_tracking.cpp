@@ -26,16 +26,18 @@ TEST_CASE("find_object_base_expression", "[core][smt2_incremental]")
     rowt{"Address of index", {index_exprt{object_base, index}, pointer_type}},
     rowt{
       "Address of struct member",
-      {member_exprt{object_base, "baz", unsignedbv_typet{8}}, pointer_type}},
+      {member_exprt::unchecked(object_base, "baz", unsignedbv_typet{8}),
+       pointer_type}},
     rowt{
       "Address of index of struct member",
       {index_exprt{
-         member_exprt{object_base, "baz", unsignedbv_typet{8}}, index},
+         member_exprt::unchecked(object_base, "baz", unsignedbv_typet{8}),
+         index},
        pointer_type}},
     rowt{
       "Address of struct member at index",
-      {member_exprt{
-         index_exprt{object_base, index}, "baz", unsignedbv_typet{8}},
+      {member_exprt::unchecked(
+         index_exprt{object_base, index}, "baz", unsignedbv_typet{8}),
        pointer_type}});
   SECTION(description)
   {
@@ -56,7 +58,7 @@ TEST_CASE("Tracking object base expressions", "[core][smt2_incremental]")
       address_of_exprt{index_exprt{foo, index}, pointer_type}, bar_address},
     notequal_exprt{
       address_of_exprt{
-        member_exprt{foo, "baz", unsignedbv_typet{8}}, pointer_type},
+        member_exprt::unchecked(foo, "baz", unsignedbv_typet{8}), pointer_type},
       bar_address}};
   SECTION("Find base expressions")
   {

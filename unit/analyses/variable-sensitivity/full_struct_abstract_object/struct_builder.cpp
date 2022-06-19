@@ -26,7 +26,8 @@ full_struct_abstract_objectt::constant_struct_pointert build_struct(
       environment,
       ns,
       std::stack<exprt>(),
-      member_exprt(nil_exprt(), component.get_name(), component.type()),
+      member_exprt::unchecked(
+        nil_exprt(), component.get_name(), component.type()),
       environment.eval(op, ns),
       false);
 

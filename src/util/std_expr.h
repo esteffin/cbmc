@@ -2780,13 +2780,42 @@ public:
   member_exprt(exprt op, const irep_idt &component_name, typet _type)
     : unary_exprt(ID_member, std::move(op), std::move(_type))
   {
+    const auto &compound_type_id = compound().type().id();
+    PRECONDITION(
+      compound_type_id == ID_struct_tag || compound_type_id == ID_union_tag ||
+      compound_type_id == ID_struct || compound_type_id == ID_union);
     set_component_name(component_name);
+  }
+
+  // legacy constructor without type checking,
+  // will be removed eventually
+  member_exprt(exprt op, const irep_idt &component_name, typet _type, int)
+    : unary_exprt(ID_member, std::move(op), std::move(_type))
+  {
+    set_component_name(component_name);
+  }
+
+  static member_exprt unchecked(exprt op, irep_idt component_name, typet type)
+  {
+    return member_exprt(
+      std::move(op), std::move(component_name), std::move(type), 0);
   }
 
   member_exprt(exprt op, const struct_typet::componentt &c)
     : unary_exprt(ID_member, std::move(op), c.type())
   {
+    const auto &compound_type_id = compound().type().id();
+    PRECONDITION(
+      compound_type_id == ID_struct_tag || compound_type_id == ID_union_tag ||
+      compound_type_id == ID_struct || compound_type_id == ID_union);
     set_component_name(c.get_name());
+  }
+
+  // legacy constructor without type checking,
+  // will be removed eventually
+  static member_exprt unchecked(exprt op, struct_typet::componentt c)
+  {
+    return member_exprt(std::move(op), c.get_name(), c.type(), 0);
   }
 
   irep_idt get_component_name() const
