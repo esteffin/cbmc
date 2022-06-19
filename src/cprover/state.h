@@ -111,7 +111,7 @@ public:
         std::move(new_value),
         state_typet())
   {
-    // PRECONDITION(this->state().id() == ID_state);
+    PRECONDITION(this->state().type().id() == ID_state);
     PRECONDITION(this->address().type().id() == ID_pointer);
   }
 
