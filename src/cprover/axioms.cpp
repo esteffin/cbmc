@@ -171,6 +171,8 @@ void axiomst::writeable_object()
       continue;
     else if(has_prefix(id2string(a_it->object_identifier()), "va_arg::"))
       continue;
+    else if(has_prefix(id2string(a_it->object_identifier()), "va_arg_array::"))
+      continue;
 
     auto &symbol = ns.lookup(a_it->object_expr());
     bool is_const = symbol.type.get_bool(ID_C_constant);

@@ -187,7 +187,8 @@ exprt state_encodingt::replace_nondet_rec(
     {
       // return address of va_args array
       return typecast_exprt::conditional_cast(
-        object_address_exprt(va_args(function_identifier)), what.type());
+        evaluate_expr(loc, state_expr(), va_args(function_identifier)),
+        what.type());
     }
     else
       return what; // leave it
