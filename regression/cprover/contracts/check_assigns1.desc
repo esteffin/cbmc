@@ -1,6 +1,6 @@
 CORE
 check_assigns1.c
---no-inline
+
 ^EXIT=10$
 ^SIGNAL=0$
 ^\[my_function1\.assigns\.1\] line \d+ assigns clause: SUCCESS$

@@ -1,6 +1,6 @@
 CORE
 r_ok2.c
---no-inline --safety
+--safety
 ^EXIT=10$
 ^SIGNAL=0$
 ^\[int_assignment\.pointer\.1\] line \d+ pointer p safe: SUCCESS$

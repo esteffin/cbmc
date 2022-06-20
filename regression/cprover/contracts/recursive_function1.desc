@@ -1,6 +1,6 @@
 CORE
 recursive_function1.c
---no-inline
+
 ^EXIT=0$
 ^SIGNAL=0$
 ^\[recursive_function\.precondition\.1] line \d+ precondition recursive_function: SUCCESS$

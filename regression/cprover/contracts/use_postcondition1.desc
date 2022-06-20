@@ -1,6 +1,6 @@
 CORE
 use_postcondition1.c
---no-inline
+
 ^EXIT=0$
 ^SIGNAL=0$
 ^\[callee\.assigns\.1\] line \d+ assigns clause: SUCCESS$

@@ -1,6 +1,6 @@
 KNOWNBUG
 check_postcondition3.c
---no-inline
+
 ^EXIT=10$
 ^SIGNAL=0$
 ^\[my_function1\.postcondition\.1\] line \d+ postcondition: SUCCESS$

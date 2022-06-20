@@ -1,6 +1,6 @@
 CORE
 use_assigns1.c
---no-inline
+
 ^EXIT=0$
 ^SIGNAL=0$
 ^\[main\.assertion\.1\] line \d+ property 1: SUCCESS$
