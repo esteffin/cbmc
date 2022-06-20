@@ -16,6 +16,7 @@ SRC = address_taken.cpp \
       may_alias.cpp \
       propagate.cpp \
       report_properties.cpp \
+      report_traces.cpp \
       sentinel_dll.cpp \
       simplify_state_expr.cpp \
       state.cpp \
