@@ -16,6 +16,7 @@ Author:
 #include <util/c_types.h>
 #include <util/expr_util.h>
 #include <util/format_expr.h>
+#include <util/format_type.h>
 #include <util/mathematical_expr.h>
 #include <util/namespace.h>
 #include <util/pointer_offset_size.h>
@@ -57,6 +58,14 @@ exprt simplify_evaluate_update(
 
   const auto &update_state_expr = to_update_state_expr(evaluate_expr.state());
 
+#if 0
+  std::cout << "U: " << format(update_state_expr) << "\n";
+  std::cout << "u: " << format(update_state_expr.address()) << "\n";
+  std::cout << "T: " << format(update_state_expr.address().type()) << "\n";
+  std::cout << "E: " << format(evaluate_expr.address()) << "\n";
+  std::cout << "T: " << format(evaluate_expr.address().type()) << "\n";
+#endif
+
   auto may_alias = ::may_alias(
     evaluate_expr.address(), update_state_expr.address(), address_taken, ns);
 
@@ -90,7 +99,7 @@ exprt simplify_evaluate_update(
         evaluate_expr.with_state(update_state_expr.state());
       auto simplified_new_evaluate_expr = simplify_state_expr_node(
         new_evaluate_expr, address_taken, ns); // rec. call
-      return if_exprt(
+      auto if_expr = if_exprt(
         std::move(simplified_cond),
         simplify_state_expr_node(
           typecast_exprt::conditional_cast(
@@ -98,6 +107,7 @@ exprt simplify_evaluate_update(
           address_taken,
           ns),
         std::move(simplified_new_evaluate_expr));
+      return simplify_expr(if_expr, ns);
     }
   }
 
@@ -141,7 +151,10 @@ exprt simplify_evaluate_update(
     auto new_value = typecast_exprt::conditional_cast(
       update_state_expr.new_value(), evaluate_expr.type());
 
-    return if_exprt(simplified_same, new_value, simplified_new_evaluate_expr);
+    auto if_expr =
+      if_exprt(simplified_same, new_value, simplified_new_evaluate_expr);
+
+    return simplify_expr(if_expr, ns);
   }
   else
   {

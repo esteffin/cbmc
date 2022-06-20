@@ -38,11 +38,25 @@ bool permitted_by_strict_aliasing(const typet &a, const typet &b)
     // signed/unsigned of same width can alias
     return to_bitvector_type(a).get_width() == to_bitvector_type(b).get_width();
   }
+  else if(a.id() == ID_empty)
+    return true; // void * can alias any pointer
+  else if(b.id() == ID_empty)
+    return true; // void * can alias any pointer
   else if(
     a.id() == ID_pointer && to_pointer_type(a).base_type().id() == ID_empty)
     return true; // void * can alias any pointer
   else if(
     b.id() == ID_pointer && to_pointer_type(b).base_type().id() == ID_empty)
+    return true; // void * can alias any pointer
+  else if(
+    a.id() == ID_pointer && to_pointer_type(a).base_type().id() == ID_pointer &&
+    to_pointer_type(to_pointer_type(a).base_type()).base_type().id() ==
+      ID_empty)
+    return true; // void * can alias any pointer
+  else if(
+    b.id() == ID_pointer && to_pointer_type(b).base_type().id() == ID_pointer &&
+    to_pointer_type(to_pointer_type(b).base_type()).base_type().id() ==
+      ID_empty)
     return true; // void * can alias any pointer
   else
   {
@@ -123,6 +137,16 @@ static bool stack_and_not_dirty(
     return false;
 }
 
+static exprt drop_pointer_typecasts(exprt src)
+{
+  if(
+    src.id() == ID_typecast &&
+    to_typecast_expr(src).op().type().id() == ID_pointer)
+    return drop_pointer_typecasts(to_typecast_expr(src).op());
+  else
+    return src;
+}
+
 optionalt<exprt> may_alias(
   const exprt &a,
   const exprt &b,
@@ -136,7 +160,7 @@ optionalt<exprt> may_alias(
   static const auto false_expr = false_exprt();
 
   // syntactically the same?
-  if(a == b)
+  if(drop_pointer_typecasts(a) == drop_pointer_typecasts(b))
     return true_expr;
 
   // consider the strict aliasing rule
