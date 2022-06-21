@@ -16,7 +16,7 @@ Author:
 
 #include <unordered_set>
 
-bool counterexample_found(
+optionalt<propertyt::tracet> counterexample_found(
   const std::vector<framet> &,
   const workt &,
   const std::unordered_set<symbol_exprt, irep_hash> &address_taken,

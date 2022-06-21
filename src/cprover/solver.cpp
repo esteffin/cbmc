@@ -334,7 +334,8 @@ void solver(
     };
 
   // we start with I = P
-  queue.emplace_back(property.frame, property.condition, workt::patht{});
+  queue.emplace_back(
+    property.frame, property.condition, workt::patht{property.frame});
 
   while(!queue.empty())
   {
@@ -349,11 +350,13 @@ void solver(
       std::cout << '\n';
     }
 
-    if(counterexample_found(
-         frames, work, address_taken, solver_options.verbose, ns))
+    auto counterexample_found = ::counterexample_found(
+      frames, work, address_taken, solver_options.verbose, ns);
+
+    if(counterexample_found)
     {
       property.status = propertyt::REFUTED;
-      property.path = work.path;
+      property.trace = counterexample_found.value();
       return;
     }
 

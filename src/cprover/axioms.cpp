@@ -318,6 +318,15 @@ void axiomst::ok_fc()
   }
 }
 
+exprt axiomst::translate(exprt src) const
+{
+  auto r = replacement_map.find(src);
+  if(r == replacement_map.end())
+    return src;
+  else
+    return r->second;
+}
+
 exprt axiomst::replace(exprt src)
 {
   src.type() = replace(src.type());

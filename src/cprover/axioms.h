@@ -41,6 +41,8 @@ public:
   void set_to_false(exprt);
   void emit();
 
+  exprt translate(exprt) const;
+
 protected:
   decision_proceduret &dest;
   const std::unordered_set<symbol_exprt, irep_hash> &address_taken;

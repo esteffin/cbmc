@@ -11,7 +11,10 @@ Author:
 
 #include "report_traces.h"
 
+#include <util/format_expr.h>
+
 #include "console.h"
+#include "state.h"
 
 #include <iomanip>
 
@@ -22,10 +25,9 @@ void show_trace(
 {
   irep_idt function_id, file;
 
-  // the path goes backwards, we want a forwards trace
-  for(auto r_it = property.path.rbegin(); r_it != property.path.rend(); ++r_it)
+  for(auto &step : property.trace)
   {
-    const auto &frame = frames[r_it->index];
+    const auto &frame = frames[step.frame.index];
 
     if(
       frame.source_location.get_function() != function_id ||
@@ -40,8 +42,41 @@ void show_trace(
     }
 
     consolet::out() << consolet::faint << std::setw(4)
-                    << frame.source_location.get_line() << consolet::reset;
-    consolet::out() << '\n';
+                    << frame.source_location.get_line() << consolet::reset
+                    << ' ';
+
+    if(step.updates.empty())
+    {
+      bool first = true;
+      for(auto &implication : frame.implications)
+      {
+        if(first)
+          first = false;
+        else
+        {
+          consolet::out() << std::setw(4) << ' ';
+        }
+        consolet::out() << "constraint: " << format(implication.as_expr())
+                        << '\n';
+      }
+    }
+    else
+    {
+      bool first = true;
+      for(auto &update : step.updates)
+      {
+        if(first)
+          first = false;
+        else
+        {
+          consolet::out() << std::setw(4) << ' ';
+        }
+
+        consolet::out() << format(update.address);
+        consolet::out() << " := " << format(update.value);
+        consolet::out() << '\n';
+      }
+    }
   }
 }
 
