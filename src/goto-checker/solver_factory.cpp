@@ -148,7 +148,9 @@ std::unique_ptr<solver_factoryt::solvert> solver_factoryt::get_solver()
   const auto incremental_smt2_solver =
     options.get_option("incremental-smt2-solver");
   if(!incremental_smt2_solver.empty())
+  {
     return get_incremental_smt2(incremental_smt2_solver);
+  }
   if(options.get_bool_option("smt2"))
     return get_smt2(get_smt2_solver_type());
   return get_default();
@@ -329,12 +331,50 @@ solver_factoryt::get_string_refinement()
     std::move(decision_procedure), std::move(prop));
 }
 
+std::unique_ptr<std::ofstream>
+open_outfile_and_check(const std::string &filename)
+{
+  if(filename.empty())
+    return nullptr;
+
+#ifdef _MSC_VER
+  auto out = util_make_unique<std::ofstream>(widen(filename));
+#else
+  auto out = util_make_unique<std::ofstream>(filename);
+#endif
+
+  if(!*out)
+  {
+    throw invalid_command_line_argument_exceptiont(
+      "failed to open file: " + filename, "--outfile");
+  }
+
+  std::cout << "Outputting SMTLib formula to file: " << filename << "\n";
+  return out;
+}
+
 std::unique_ptr<solver_factoryt::solvert>
 solver_factoryt::get_incremental_smt2(std::string solver_command)
 {
   no_beautification();
-  auto solver_process = util_make_unique<smt_piped_solver_processt>(
-    std::move(solver_command), message_handler);
+
+  const std::string outfile_arg = options.get_option("outfile");
+
+  std::unique_ptr<smt_base_solver_processt> solver_process = nullptr;
+
+  if(!outfile_arg.empty())
+  {
+    bool on_std_out = outfile_arg == "-";
+    std::unique_ptr<std::ostream> outfile =
+      on_std_out ? nullptr : open_outfile_and_check(outfile_arg);
+    solver_process = util_make_unique<smt_incremental_dry_run_solvert>(
+      message_handler, on_std_out ? std::cout : *outfile, std::move(outfile));
+  }
+  else
+  {
+    solver_process = util_make_unique<smt_piped_solver_processt>(
+      std::move(solver_command), message_handler);
+  }
 
   return util_make_unique<solvert>(
     util_make_unique<smt2_incremental_decision_proceduret>(
@@ -390,17 +430,7 @@ solver_factoryt::get_smt2(smt2_dect::solvert solver)
   }
   else
   {
-#ifdef _MSC_VER
-    auto out = util_make_unique<std::ofstream>(widen(filename));
-#else
-    auto out = util_make_unique<std::ofstream>(filename);
-#endif
-
-    if(!*out)
-    {
-      throw invalid_command_line_argument_exceptiont(
-        "failed to open file: " + filename, "--outfile");
-    }
+    auto out = open_outfile_and_check(filename);
 
     auto smt2_conv = util_make_unique<smt2_convt>(
       ns,
