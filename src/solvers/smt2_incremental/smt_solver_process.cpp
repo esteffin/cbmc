@@ -28,6 +28,7 @@ void smt_piped_solver_processt::send(const smt_commandt &smt_command)
   const std::string command_string = smt_to_smt2_string(smt_command);
   log.debug() << "Sending command to SMT2 solver - " << command_string
               << messaget::eom;
+
   const auto response = process.send(command_string + "\n");
   switch(response)
   {
@@ -67,4 +68,36 @@ smt_responset smt_piped_solver_processt::receive_response(
   if(const auto validation_errors = validation_result.get_if_error())
     handle_invalid_smt(*validation_errors, log);
   return *validation_result.get_if_valid();
+}
+
+smt_incremental_dry_run_solver::smt_incremental_dry_run_solver(
+  message_handlert &message_handler,
+  std::ostream &out_stream,
+  std::unique_ptr<std::ostream> file_stream)
+  : file_stream(std::move(file_stream)),
+    out_stream(out_stream),
+    log(message_handler)
+{
+}
+
+const std::string &smt_incremental_dry_run_solver::description()
+{
+  return desc;
+}
+
+void smt_incremental_dry_run_solver::send(const smt_commandt &smt_command)
+{
+  out_stream << smt_to_smt2_string(smt_command) << '\n';
+}
+
+smt_responset smt_incremental_dry_run_solver::receive_response(
+  const std::unordered_map<irep_idt, smt_identifier_termt> &identifier_table)
+{
+  // Using `smt_unsat_responset` as response because the decision-procedure will
+  // terminate anyway (stop-on-fail), it is not reported to the user as for
+  // `unknown`, and does not trigger a subsequent invocation to get the model
+  // (as a `smt_sat_responset` answer will trigger).
+  return *response_or_errort<smt_responset>{
+    smt_check_sat_responset{smt_unsat_responset{}}}
+            .get_if_valid();
 }
