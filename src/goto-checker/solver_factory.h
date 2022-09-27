@@ -114,6 +114,7 @@ void parse_solver_options(const cmdlinet &cmdline, optionst &options);
   "(refine-arrays)"                                                            \
   "(refine-arithmetic)"                                                        \
   "(outfile):"                                                                 \
+  "(dump-smt-formula):"                                                        \
   "(write-solver-stats-to):"
 
 #define HELP_SOLVER                                                            \
@@ -141,6 +142,8 @@ void parse_solver_options(const cmdlinet &cmdline, optionst &options);
   "                              command to invoke external SMT solver for\n"  \
   "                              incremental solving (experimental)\n"         \
   " --outfile filename           output formula to given file\n"               \
+  " --dump-smt-formula filename  output smt incremental formula to the\n"      \
+  "                              given file\n"                                 \
   " --write-solver-stats-to json-file\n"                                       \
   "                              collect the solver query complexity\n"
 
