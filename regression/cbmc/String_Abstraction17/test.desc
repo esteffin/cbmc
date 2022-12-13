@@ -1,4 +1,4 @@
-CORE
+CORE new-smt-backend
 strcpy-no-decl.c
 --string-abstraction --validate-goto-model
 ^EXIT=10$

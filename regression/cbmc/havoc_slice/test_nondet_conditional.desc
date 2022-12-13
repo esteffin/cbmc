@@ -1,4 +1,4 @@
-CORE
+CORE new-smt-backend
 test_nondet_conditional.c
 
 ^EXIT=10$

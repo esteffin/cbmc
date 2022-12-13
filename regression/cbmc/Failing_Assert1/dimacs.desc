@@ -1,4 +1,4 @@
-CORE
+CORE new-smt-backend
 main.c
 --dimacs
 ^Runtime decision procedure: [0-9]+(\.[0-9]+(e-[0-9]+)?)?s$

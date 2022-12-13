@@ -1,4 +1,4 @@
-THOROUGH
+THOROUGH new-smt-backend
 main.c
 
 ^EXIT=10$

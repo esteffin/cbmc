@@ -1,4 +1,4 @@
-CORE
+CORE new-smt-backend
 uf2.c
 
 ^EXIT=0$

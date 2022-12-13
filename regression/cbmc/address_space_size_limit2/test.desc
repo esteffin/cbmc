@@ -1,4 +1,4 @@
-KNOWNBUG
+KNOWNBUG new-smt-backend
 test.i
 --32 --object-bits 31 --unwind 11 --no-simplify
 ^EXIT=10$

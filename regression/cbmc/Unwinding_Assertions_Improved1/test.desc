@@ -1,4 +1,4 @@
-FUTURE
+FUTURE new-smt-backend
 main.c
 --unwind 5
 ^EXIT=0$

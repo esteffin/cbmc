@@ -1,4 +1,4 @@
-KNOWNBUG
+KNOWNBUG new-smt-backend
 bool7.c
 
 ^EXIT=0$

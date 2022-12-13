@@ -1,4 +1,4 @@
-KNOWNBUG
+KNOWNBUG new-smt-backend
 main.i
 --little-endian --no-simplify
 ^EXIT=10$

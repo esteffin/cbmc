@@ -1,4 +1,4 @@
-FUTURE
+FUTURE new-smt-backend
 main.c
 --pointer-check
 ^EXIT=10$

@@ -1,4 +1,4 @@
-CORE
+CORE new-smt-backend
 strcpy2.c
 --string-abstraction
 ^EXIT=0$

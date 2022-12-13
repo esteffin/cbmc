@@ -1,4 +1,4 @@
-CORE thorough-paths
+CORE thorough-paths new-smt-backend
 bitreverse.c
 
 ^VERIFICATION SUCCESSFUL$

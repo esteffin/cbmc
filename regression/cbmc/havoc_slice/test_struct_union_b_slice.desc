@@ -1,4 +1,4 @@
-CORE
+CORE new-smt-backend
 test_struct_union_b_slice.c
 
 ^EXIT=10$

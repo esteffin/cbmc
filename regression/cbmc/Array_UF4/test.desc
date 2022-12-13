@@ -1,4 +1,4 @@
-KNOWNBUG
+KNOWNBUG new-smt-backend
 main.c
 --arrays-uf-always --no-propagation --refine-arrays --unwind 2
 ^EXIT=0$

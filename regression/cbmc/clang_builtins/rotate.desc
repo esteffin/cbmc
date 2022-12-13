@@ -1,4 +1,4 @@
-CORE
+CORE new-smt-backend
 rotate.c
 
 ^VERIFICATION SUCCESSFUL$

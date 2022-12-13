@@ -1,4 +1,4 @@
-CORE smt-backend broken-cprover-smt-backend
+CORE smt-backend broken-cprover-smt-backend new-smt-backend
 trace-char.c
 --trace --smt2 --z3
 ^EXIT=10$

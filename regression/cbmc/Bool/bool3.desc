@@ -1,4 +1,4 @@
-CORE
+CORE new-smt-backend
 bool3.c
 --json-ui
 ^EXIT=10$

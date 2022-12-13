@@ -1,4 +1,4 @@
-KNOWNBUG
+KNOWNBUG new-smt-backend
 main.c
 
 ^VERIFICATION FAILED$

@@ -1,4 +1,4 @@
-KNOWNBUG
+KNOWNBUG new-smt-backend
 main.c
 --localize-faults
 ^EXIT=10$

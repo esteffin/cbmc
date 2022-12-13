@@ -1,4 +1,4 @@
-CORE thorough-smt-backend
+CORE thorough-smt-backend new-smt-backend
 main.c
 --bounds-check --pointer-check
 ^EXIT=10$
