@@ -8,8 +8,8 @@ target_include_directories(api-binary-driver
     ${CBMC_BINARY_DIR}
     ${CBMC_SOURCE_DIR}
     # TODO: Should be fixed for the proper include form.
-    ${CMAKE_CURRENT_SOURCE_DIR}/../src/libcprover-cpp/)
-target_link_libraries(api-binary-driver goto-programs util langapi ansi-c cprover-api-cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/libcprover-cpp-api/)
+target_link_libraries(api-binary-driver goto-programs util langapi ansi-c cprover-lib)
 
 # Enable test running
 set(test_pl_path "${CBMC_SOURCE_DIR}/../regression/test.pl")

@@ -87,6 +87,7 @@ foreach(SOLVER ${sat_impl})
         target_sources(solvers PRIVATE ${minisat2_source})
 
         target_link_libraries(solvers minisat2-condensed)
+        list(APPEND SAT_IMPL_TARGET_NAMES "minisat2-condensed")
     elseif("${SOLVER}" STREQUAL "glucose")
         message(STATUS "Building solvers with glucose")
 
@@ -106,6 +107,7 @@ foreach(SOLVER ${sat_impl})
         target_sources(solvers PRIVATE ${glucose_source})
 
         target_link_libraries(solvers glucose-condensed)
+        list(APPEND SAT_IMPL_TARGET_NAMES "glucose-condensed")
     elseif("${SOLVER}" STREQUAL "cadical")
         message(STATUS "Building solvers with cadical")
 
@@ -129,6 +131,7 @@ foreach(SOLVER ${sat_impl})
         )
 
         target_link_libraries(solvers cadical)
+        list(APPEND SAT_IMPL_TARGET_NAMES "cadical")
     elseif("${SOLVER}" STREQUAL "ipasir-cadical")
         message(STATUS "Building with IPASIR solver linking against: CaDiCaL")
 
@@ -156,6 +159,7 @@ foreach(SOLVER ${sat_impl})
             ${cadical_SOURCE_DIR}/src
         )
         target_link_libraries(solvers cadical_ipasir)
+        list(APPEND SAT_IMPL_TARGET_NAMES "cadical_ipasir")
     elseif("${SOLVER}" STREQUAL "ipasir-custom")
         message(STATUS "Building with IPASIR solver linking: custom solver provided")
 
@@ -188,11 +192,13 @@ foreach(SOLVER ${sat_impl})
             ${IPASIR}
         )
         target_link_libraries(solvers ipasir_custom pthread)
+        list(APPEND SAT_IMPL_TARGET_NAMES "ipasir_custom")
     endif()
 endforeach()
 
 if(CMAKE_USE_CUDD)
     target_link_libraries(solvers util cudd-cplusplus cudd)
+    list(APPEND SAT_IMPL_TARGET_NAMES "cudd-cplusplus" "cudd")
     target_include_directories(solvers
         PUBLIC
         ${CUDD_INCLUDE}/cudd/

@@ -4,10 +4,10 @@ file(GLOB_RECURSE sources "*.cpp" "*.h")
 add_executable(lib-unit ${sources})
 target_include_directories(lib-unit
     PUBLIC
-    ${CBMC_SOURCE_DIR}/libcprover-cpp
+    ${CBMC_SOURCE_DIR}
 )
 target_link_libraries(lib-unit
-    cprover-api-cpp
+    cprover-lib
 )
 
 add_test(

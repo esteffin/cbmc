@@ -94,6 +94,8 @@ set(sat_impl "minisat2" CACHE STRING
     'minisat2', 'glucose', 'cadical', 'ipasir-cadical' or 'ipasir-custom'"
 )
 
+set(SAT_IMPL_TARGET_NAME "")
+
 if(${enable_cbmc_tests})
     enable_testing()
 endif()
@@ -216,9 +218,9 @@ cprover_default_properties(
     cbmc
     cbmc-lib
     cpp
-    cprover-api-cpp
-    cprover
     cprover-lib
+    cprover
+    cprover-inner-lib
     crangler
     crangler-lib
     driver
@@ -275,7 +277,7 @@ else()
     corrosion_import_crate(MANIFEST_PATH src/libcprover-rust/Cargo.toml)
     list(JOIN sat_impl " " sat_impl_str)
     corrosion_set_env_vars(cprover-api-rust CBMC_BUILD_DIR=${CMAKE_BINARY_DIR} "SAT_IMPL=${sat_impl_str}")
-    corrosion_link_libraries(cprover-api-rust cprover-api-cpp)
+    corrosion_link_libraries(cprover-api-rust cprover-lib)
     install(TARGETS cprover-api-rust RUNTIME DESTINATION lib)
     # NOTE: We want to rename to a name consistent with the name of the
     # rest of the static libraries built as a result of a build. The reason

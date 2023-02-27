@@ -25,6 +25,8 @@
 #include <langapi/mode.h>
 #include <pointer-analysis/add_failed_symbols.h>
 
+#include <util/version.h>
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -33,7 +35,7 @@ extern configt config;
 
 std::unique_ptr<std::string> api_sessiont::get_api_version() const
 {
-  return util_make_unique<std::string>(std::string{"0.1"});
+  return util_make_unique<std::string>(std::string{CBMC_VERSION});
 }
 
 struct api_session_implementationt
