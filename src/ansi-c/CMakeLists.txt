@@ -119,7 +119,7 @@ list(REMOVE_ITEM sources
     "${CMAKE_CURRENT_SOURCE_DIR}/file_converter.cpp"
 )
 
-add_library(ansi-c
+add_library(ansi-c OBJECT
     ${sources}
     ${BISON_parser_OUTPUTS}
     ${FLEX_scanner_OUTPUTS}

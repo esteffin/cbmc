@@ -60,7 +60,7 @@ list(REMOVE_ITEM sources
     ${CMAKE_CURRENT_SOURCE_DIR}/smt2/smt2_solver.cpp
 )
 
-add_library(solvers ${sources})
+add_library(solvers OBJECT ${sources})
 
 include("${CBMC_SOURCE_DIR}/../cmake/DownloadProject.cmake")
 

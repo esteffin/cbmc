@@ -40,7 +40,7 @@ add_custom_target(
     -P ${CMAKE_BINARY_DIR}/version.cmake
 )
 
-add_library(util
+add_library(util OBJECT
   ${sources}
   version.cpp)
 

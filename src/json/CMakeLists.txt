@@ -2,8 +2,8 @@ generic_bison(json)
 generic_flex(json)
 
 file(GLOB_RECURSE sources "*.cpp" "*.h")
-add_library(json
-    ${sources}
+add_library(json OBJECT
+        ${sources}
     ${BISON_parser_OUTPUTS}
     ${FLEX_scanner_OUTPUTS}
 )

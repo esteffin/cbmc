@@ -3,7 +3,7 @@ file(GLOB_RECURSE sources "*.cpp" "*.h")
 list(REMOVE_ITEM sources
     ${CMAKE_CURRENT_SOURCE_DIR}/goto_cc_main.cpp
 )
-add_library(goto-cc-lib ${sources})
+add_library(goto-cc-lib OBJECT ${sources})
 
 generic_includes(goto-cc-lib)
 

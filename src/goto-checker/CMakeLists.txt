@@ -1,5 +1,5 @@
 file(GLOB_RECURSE sources "*.cpp" "*.h")
-add_library(goto-checker ${sources})
+add_library(goto-checker OBJECT ${sources})
 
 generic_includes(goto-checker)
 

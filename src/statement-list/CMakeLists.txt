@@ -3,8 +3,8 @@ generic_flex(statement_list)
 
 file(GLOB_RECURSE sources "*.cpp" "*.h")
 
-add_library(statement-list
-    ${sources}
+add_library(statement-list OBJECT
+        ${sources}
     ${BISON_parser_OUTPUTS}
     ${FLEX_scanner_OUTPUTS}
 )

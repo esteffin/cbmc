@@ -1,5 +1,5 @@
 file(GLOB_RECURSE sources "*.cpp" "*.h")
-add_library(json-symtab-language ${sources})
+add_library(json-symtab-language OBJECT ${sources})
 
 generic_includes(json-symtab-language)
 

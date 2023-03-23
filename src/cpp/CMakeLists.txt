@@ -36,7 +36,7 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 endif()
 
 file(GLOB_RECURSE sources "*.cpp" "*.h")
-add_library(cpp ${sources})
+add_library(cpp OBJECT ${sources})
 
 set_source_files_properties(
         ${sources}
