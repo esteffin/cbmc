@@ -22,38 +22,37 @@ target_include_directories(cprover-api-cpp PUBLIC
 # Get the dependency targets of the `solver` target (see `../solver/CMakeLists.txt`), so that they
 # are merged to the final library too.  (such dependencies are not known statically as the selection
 # of the SAT backend is left to the building user.
-get_target_property(LIBRARY_DEPENDENCIES solvers LINK_LIBRARIES)
+#get_target_property(LIBRARY_DEPENDENCIES solvers LINK_LIBRARIES)
 
-# Get all the dependency targets we know statically.
-list(APPEND
-        LIBRARY_DEPENDENCIES
-        "goto-programs"
-        "util"
-        "langapi"
-        "ansi-c"
-        "analyses"
-        "goto-instrument-lib"
-        "big-int"
-        "linking"
-        "goto-checker"
-        "solvers"
-        "assembler"
-        "xml"
-        "json"
-        "json-symtab-language"
-        "jsil"
-        "statement-list"
-        "goto-symex"
-        "pointer-analysis"
-        "cbmc-lib")
+## Get all the dependency targets we know statically.
+#list(APPEND
+#        LIBRARY_DEPENDENCIES
+#        )
 
 # Remove possible duplicate library targets
-list(REMOVE_DUPLICATES LIBRARY_DEPENDENCIES)
+#list(REMOVE_DUPLICATES LIBRARY_DEPENDENCIES)
 
 # Add all the dependency targets as dependencies of `cprover-api-cpp`
 target_link_libraries(cprover-api-cpp
                       PRIVATE
-                      ${LIBRARY_DEPENDENCIES})
+                        "goto-programs"
+                        "util"
+                        "langapi"
+                        "ansi-c"
+                        "analyses"
+                        "goto-instrument-lib"
+                        "linking"
+                        "goto-checker"
+                        "solvers"
+                        "assembler"
+                        "xml"
+                        "json"
+                        "json-symtab-language"
+                        "jsil"
+                        "statement-list"
+                        "goto-symex"
+                        "pointer-analysis"
+                        "cbmc-lib")
 
 # To be able to invoke `ar` on the dependencies we need the paths of the libraries `.a` files.
 # Ths is done by using the cmake generator `$<TARGET_FILE:dependency>`, that in turn will be
@@ -68,9 +67,9 @@ string(REPLACE ";" " " DEPENDENCY_TARGETS "${DEPENDENCY_TARGETS}")
 # To aggregate all the dependencies into a final `.a` file we add a custom pass after target
 # `cprover-api-cpp` has been built where the `aggregate_dependencies.sh` script is run with the `ar`
 # command, the destination library and the dependencies paths
-add_custom_command(TARGET cprover-api-cpp POST_BUILD
-                   COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/add_dependencies.sh" "${CMAKE_AR}" "$<TARGET_FILE:cprover-api-cpp>" "${DEPENDENCY_TARGETS}"
-                   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+#add_custom_command(TARGET cprover-api-cpp POST_BUILD
+#                   COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/add_dependencies.sh" "${CMAKE_AR}" "$<TARGET_FILE:cprover-api-cpp>" "${DEPENDENCY_TARGETS}"
+#                   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 
 # Set the properties of `cprover-api-cpp`.  Mainly the output name `libcprover.<version>.a`, its
 # version (CBMC version) and the list of public headers to be installed
