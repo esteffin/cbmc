@@ -8,19 +8,7 @@ add_library(goto-diff-lib OBJECT ${sources})
 generic_includes(goto-diff-lib)
 
 target_link_libraries(goto-diff-lib
-    ansi-c
-    cpp
-    linking
-    big-int
-    pointer-analysis
     goto-instrument-lib
-    goto-programs
-    assembler
-    analyses
-    langapi
-    xml
-    util
-    solvers
 )
 
 add_if_library(goto-diff-lib jsil)

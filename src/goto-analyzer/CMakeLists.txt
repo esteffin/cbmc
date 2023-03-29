@@ -8,18 +8,8 @@ add_library(goto-analyzer-lib OBJECT ${sources})
 generic_includes(goto-analyzer-lib)
 
 target_link_libraries(goto-analyzer-lib
-    ansi-c
     cpp
-    linking
-    big-int
-    goto-checker
-    goto-programs
-    analyses
     pointer-analysis
-    langapi
-    json
-    assembler
-    util
 )
 
 add_if_library(goto-analyzer-lib jsil)

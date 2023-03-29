@@ -7,4 +7,4 @@ if(CMAKE_USE_CUDD)
     target_include_directories(goto-symex PUBLIC ${CUDD_INCLUDE}/cudd/)
 endif()
 
-target_link_libraries(goto-symex util)
+target_link_libraries(goto-symex pointer-analysis solvers)

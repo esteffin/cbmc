@@ -8,24 +8,10 @@ add_library(cbmc-lib OBJECT ${sources})
 generic_includes(cbmc-lib)
 
 target_link_libraries(cbmc-lib
-    analyses
-    ansi-c
-    assembler
-    big-int
-    cpp
     goto-checker
     goto-instrument-lib
-    goto-programs
-    goto-symex
-    json
     json-symtab-language
-    langapi
-    linking
-    pointer-analysis
-    solvers
     statement-list
-    util
-    xml
 )
 
 add_if_library(cbmc-lib bv_refinement)

@@ -46,4 +46,4 @@ set_source_files_properties(
 
 generic_includes(cpp)
 
-target_link_libraries(cpp util ansi-c)
+target_link_libraries(cpp ansi-c)

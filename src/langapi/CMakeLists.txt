@@ -3,4 +3,4 @@ add_library(langapi OBJECT ${sources})
 
 generic_includes(langapi)
 
-target_link_libraries(langapi util)
+target_link_libraries(langapi goto-programs)

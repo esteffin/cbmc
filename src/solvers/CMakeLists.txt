@@ -60,6 +60,8 @@ list(REMOVE_ITEM sources
     ${CMAKE_CURRENT_SOURCE_DIR}/smt2/smt2_solver.cpp
 )
 
+message(WARNING "Srcs: ${sources}")
+
 add_library(solvers OBJECT ${sources})
 
 include("${CBMC_SOURCE_DIR}/../cmake/DownloadProject.cmake")
@@ -84,9 +86,9 @@ foreach(SOLVER ${sat_impl})
             SATCHECK_MINISAT2 HAVE_MINISAT2 __STDC_FORMAT_MACROS __STDC_LIMIT_MACROS
         )
 
-        target_sources(solvers PRIVATE ${minisat2_source})
+        target_sources(solvers PUBLIC ${minisat2_source})
 
-        target_link_libraries(solvers minisat2-condensed)
+        target_link_libraries(solvers PUBLIC minisat2-condensed)
     elseif("${SOLVER}" STREQUAL "glucose")
         message(STATUS "Building solvers with glucose")
 
@@ -103,9 +105,9 @@ foreach(SOLVER ${sat_impl})
             SATCHECK_GLUCOSE HAVE_GLUCOSE __STDC_FORMAT_MACROS __STDC_LIMIT_MACROS
         )
 
-        target_sources(solvers PRIVATE ${glucose_source})
+        target_sources(solvers PUBLIC ${glucose_source})
 
-        target_link_libraries(solvers glucose-condensed)
+        target_link_libraries(solvers PUBLIC glucose-condensed)
     elseif("${SOLVER}" STREQUAL "cadical")
         message(STATUS "Building solvers with cadical")
 
@@ -128,7 +130,7 @@ foreach(SOLVER ${sat_impl})
             ${cadical_SOURCE_DIR}/src
         )
 
-        target_link_libraries(solvers cadical)
+        target_link_libraries(solvers PUBLIC cadical)
     elseif("${SOLVER}" STREQUAL "ipasir-cadical")
         message(STATUS "Building with IPASIR solver linking against: CaDiCaL")
 
@@ -155,7 +157,7 @@ foreach(SOLVER ${sat_impl})
             PUBLIC
             ${cadical_SOURCE_DIR}/src
         )
-        target_link_libraries(solvers cadical_ipasir)
+        target_link_libraries(solvers PUBLIC cadical_ipasir)
     elseif("${SOLVER}" STREQUAL "ipasir-custom")
         message(STATUS "Building with IPASIR solver linking: custom solver provided")
 
@@ -199,10 +201,14 @@ if(CMAKE_USE_CUDD)
     )
 endif(CMAKE_USE_CUDD)
 
-target_link_libraries(solvers util)
+target_link_libraries(solvers PUBLIC util)
+##
+#add_library(polok smt2/smt2_solver.cpp)
+#target_link_libraries(polok solvers)
 
 # Executable
 add_executable(smt2_solver smt2/smt2_solver.cpp)
 target_link_libraries(smt2_solver solvers)
+generic_includes(smt2_solver)
 
 generic_includes(solvers)
