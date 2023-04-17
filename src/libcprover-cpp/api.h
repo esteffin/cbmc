@@ -79,11 +79,17 @@ struct api_sessiont
   /// Validate the loaded goto model
   void validate_goto_model() const;
 
-  // A simple API version information function.
+  /// A simple API version information function.
   std::unique_ptr<std::string> get_api_version() const;
+
+  /// Run the verifier! <FILL ME>
+  std::unique_ptr<verification_resultt> run_verifier() const;
 
 private:
   std::unique_ptr<api_session_implementationt> implementation;
+
+  /// <FILL ME>
+  bool preprocess_model() const;
 };
 
 #endif

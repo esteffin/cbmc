@@ -137,6 +137,18 @@ std::unique_ptr<verification_resultt> api_sessiont::verify_model() const
 {
   PRECONDITION(implementation->model);
 
+  bool empty_result = preprocess_model();
+  if (empty_result) {
+    return {};
+  }
+
+  return run_verifier();
+}
+
+/// <FILL ME>
+/// The function return `true` if <WHY???>
+bool api_sessiont::preprocess_model() const
+{
   // Remove inline assembler; this needs to happen before adding the library.
   remove_asm(*implementation->model);
 
@@ -150,11 +162,11 @@ std::unique_ptr<verification_resultt> api_sessiont::verify_model() const
     cprover_c_library_factory);
 
   // Common removal of types and complex constructs
-  if(::process_goto_program(
-       *implementation->model, *implementation->options, log))
-  {
-    return {};
-  }
+    if(::process_goto_program(
+         *implementation->model, *implementation->options, log))
+    {
+      return true;
+    }
 
   // add failed symbols
   // needs to be done before pointer analysis
@@ -168,7 +180,12 @@ std::unique_ptr<verification_resultt> api_sessiont::verify_model() const
   label_properties(*implementation->model);
 
   remove_skip(*implementation->model);
+  return false;
+}
 
+/// <FILL ME>
+std::unique_ptr<verification_resultt> api_sessiont::run_verifier() const
+{
   ui_message_handlert ui_message_handler(*implementation->message_handler);
   all_properties_verifier_with_trace_storaget<multi_path_symex_checkert>
     verifier(
