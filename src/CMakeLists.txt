@@ -119,6 +119,7 @@ add_subdirectory(goto-harness)
 add_subdirectory(goto-synthesizer)
 add_subdirectory(symtab2gb)
 add_subdirectory(libcprover-cpp)
+add_subdirectory(run-symex-only)
 
 if(UNIX OR WITH_MEMORY_ANALYZER)
 add_subdirectory(memory-analyzer)
