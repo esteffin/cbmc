@@ -152,6 +152,11 @@ void api_sessiont::read_goto_binary(std::string &file) const
     ::read_goto_binary(file, *implementation->message_handler).value());
 }
 
+bool api_sessiont::is_goto_binary(std::string &file) const
+{
+  return ::is_goto_binary(file, *implementation->message_handler);
+}
+
 /// <FILL ME>
 /// The function return `true` if <WHY???>
 bool api_sessiont::preprocess_model() const

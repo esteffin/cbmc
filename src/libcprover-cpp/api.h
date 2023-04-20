@@ -89,6 +89,9 @@ struct api_sessiont
   /// !! Will error out if it reads a source file.
   void read_goto_binary(std::string &file) const;
 
+  /// True if file is goto-binary.
+  bool is_goto_binary(std::string &file) const;
+
 private:
   std::unique_ptr<api_session_implementationt> implementation;
 
