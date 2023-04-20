@@ -244,6 +244,7 @@ cprover_default_properties(
     lib-unit
     linking
     pointer-analysis
+    run-symex-only
     solvers
     statement-list
     symtab2gb

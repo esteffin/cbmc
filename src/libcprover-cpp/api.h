@@ -85,6 +85,10 @@ struct api_sessiont
   /// Run the verifier! <FILL ME>
   std::unique_ptr<verification_resultt> run_verifier() const;
 
+  /// Read a goto-binary.
+  /// !! Will error out if it reads a source file.
+  void read_goto_binary(std::string &file) const;
+
 private:
   std::unique_ptr<api_session_implementationt> implementation;
 

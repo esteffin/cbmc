@@ -14,6 +14,7 @@
 #include <goto-programs/initialize_goto_model.h>
 #include <goto-programs/link_to_library.h>
 #include <goto-programs/process_goto_program.h>
+#include <goto-programs/read_goto_binary.h>
 #include <goto-programs/remove_skip.h>
 #include <goto-programs/remove_unused_functions.h>
 #include <goto-programs/set_properties.h>
@@ -143,6 +144,12 @@ std::unique_ptr<verification_resultt> api_sessiont::verify_model() const
   }
 
   return run_verifier();
+}
+
+void api_sessiont::read_goto_binary(std::string &file) const
+{
+  implementation->model = util_make_unique<goto_modelt>(
+    ::read_goto_binary(file, *implementation->message_handler).value());
 }
 
 /// <FILL ME>
