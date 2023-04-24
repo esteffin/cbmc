@@ -12,11 +12,15 @@
 #include "api.h"
 
 #include <iostream>
-#include <map>
 
-
-core_cbmc_only_parse_optionst::core_cbmc_only_parse_optionst(int argc, const char **argv)
-  : parse_options_baset(CORE_CBMC_ONLY_OPTIONS, argc, argv, std::string("CORE_CBMC_ONLY") + CBMC_VERSION)
+core_cbmc_only_parse_optionst::core_cbmc_only_parse_optionst(
+  int argc,
+  const char **argv)
+  : parse_options_baset(
+      CORE_CBMC_ONLY_OPTIONS,
+      argc,
+      argv,
+      std::string("CORE_CBMC_ONLY") + CBMC_VERSION)
 {
 }
 
@@ -27,7 +31,8 @@ void print_messages_to_stdout(
   std::cout << api_message_get_string(message) << std::endl;
 }
 
-int core_cbmc_only_parse_optionst::doit() {
+int core_cbmc_only_parse_optionst::doit()
+{
   auto api_options = api_optionst::create();
 
   if(cmdline.isset("version"))
@@ -44,11 +49,51 @@ int core_cbmc_only_parse_optionst::doit() {
     return CPROVER_EXIT_INCORRECT_TASK;
   }
 
-  std::string filename=cmdline.args[0];
+  std::string filename = cmdline.args[0];
 
   if(cmdline.isset("validate-goto-model"))
   {
     api_options.validate_goto_model(true);
+  }
+
+  if (cmdline.isset("unwinding-assertions") && cmdline.isset("no-unwinding-assertions"))
+  {
+    log.error() << "Option --unwinding-assertions conflicts with --no-unwinding-assertions" << messaget::eom;
+    return CPROVER_EXIT_USAGE_ERROR;
+  }
+
+  if(cmdline.isset("unwinding-assertions"))
+  {
+//    api_options.unwinding_assertion = true;
+    // api_options.paths_symex_explore_all = true;
+  }
+  if(cmdline.isset("unwind"))
+  {
+//    api_options.unwind = cmdline.get_value("unwind");
+    if(!cmdline.isset("unwinding-assertions"))
+    {
+      log.warning() << "**** WARNING: Use --unwinding-assertions to obtain "
+                       "sound verification results"
+                    << messaget::eom;
+    }
+  }
+  if(cmdline.isset("unwindset"))
+  {
+//    api_options.unwindset = cmdline.get_comma_separated_values("unwindset");
+    if(!cmdline.isset("unwinding-assertions"))
+    {
+      log.warning() << "**** WARNING: Use --unwinding-assertions to obtain "
+                       "sound verification results"
+                    << messaget::eom;
+    }
+  }
+  if(cmdline.isset("unwind-min"))
+  {
+    api_options.unwind_min(std::stoi(cmdline.get_value("unwind-min")));
+  }
+  if(cmdline.isset("unwind-max"))
+  {
+//    api_options.unwind_max = cmdline.get_value("unwind-max");
   }
 
   // With options set, we can now initiate the API and perform analysis.

@@ -45,9 +45,18 @@ api_optionst &api_optionst::validate_goto_model(bool on)
   return *this;
 }
 
+api_optionst &api_optionst::unwind_min(int val)
+{
+    unwind_min_enabled = val;
+    return *this;
+}
+
 std::unique_ptr<optionst> api_optionst::to_engine_options() const
 {
   auto engine_options = make_internal_default_options();
   engine_options->set_option("simplify", simplify_enabled);
+  if (user_passed_unwind_min) {
+    engine_options->set_option("unwind-min", unwind_min_enabled);
+  }
   return engine_options;
 }
