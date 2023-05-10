@@ -14,6 +14,7 @@
 #include <goto-programs/initialize_goto_model.h>
 #include <goto-programs/link_to_library.h>
 #include <goto-programs/process_goto_program.h>
+#include <goto-programs/read_goto_binary.h>
 #include <goto-programs/remove_skip.h>
 #include <goto-programs/remove_unused_functions.h>
 #include <goto-programs/set_properties.h>
@@ -138,15 +139,25 @@ std::unique_ptr<verification_resultt> api_sessiont::verify_model() const
   PRECONDITION(implementation->model);
 
   bool empty_result = preprocess_model();
-  if (empty_result) {
+  if(empty_result)
+  {
     return {};
   }
 
   return run_verifier();
 }
 
-/// <FILL ME>
-/// The function return `true` if <WHY???>
+void api_sessiont::read_goto_binary(std::string &file) const
+{
+  implementation->model = util_make_unique<goto_modelt>(
+    ::read_goto_binary(file, *implementation->message_handler).value());
+}
+
+bool api_sessiont::is_goto_binary(std::string &file) const
+{
+  return ::is_goto_binary(file, *implementation->message_handler);
+}
+
 bool api_sessiont::preprocess_model() const
 {
   // Remove inline assembler; this needs to happen before adding the library.
@@ -162,11 +173,11 @@ bool api_sessiont::preprocess_model() const
     cprover_c_library_factory);
 
   // Common removal of types and complex constructs
-    if(::process_goto_program(
-         *implementation->model, *implementation->options, log))
-    {
-      return true;
-    }
+  if(::process_goto_program(
+       *implementation->model, *implementation->options, log))
+  {
+    return true;
+  }
 
   // add failed symbols
   // needs to be done before pointer analysis
@@ -183,19 +194,21 @@ bool api_sessiont::preprocess_model() const
   return false;
 }
 
-/// <FILL ME>
 std::unique_ptr<verification_resultt> api_sessiont::run_verifier() const
 {
   ui_message_handlert ui_message_handler(*implementation->message_handler);
   all_properties_verifier_with_trace_storaget<multi_path_symex_checkert>
     verifier(
       *implementation->options, ui_message_handler, *implementation->model);
+
   verification_resultt result;
   auto results = verifier();
+
   // Print messages collected to callback buffer.
   verifier.report();
   // Set results object before returning.
   result.set_result(results);
+
   auto properties = verifier.get_properties();
   result.set_properties(properties);
   return util_make_unique<verification_resultt>(result);

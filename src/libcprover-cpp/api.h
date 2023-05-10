@@ -82,13 +82,23 @@ struct api_sessiont
   /// A simple API version information function.
   std::unique_ptr<std::string> get_api_version() const;
 
-  /// Run the verifier! <FILL ME>
+  /// Process the model by running symex and the decision procedure.
+  /// @return a `unique_ptr` to the `verification_resultt` summary.
   std::unique_ptr<verification_resultt> run_verifier() const;
+
+  /// Read a goto-binary from a given filename.
+  /// @warning Will error out if it reads a source file.
+  void read_goto_binary(std::string &file) const;
+
+  /// True if file is goto-binary.
+  bool is_goto_binary(std::string &file) const;
 
 private:
   std::unique_ptr<api_session_implementationt> implementation;
 
-  /// <FILL ME>
+  /// Implement necessary transformations to reduce model to core-GOTO, before
+  /// being fed to symex.
+  /// @return The function return `true` if it failed because CBMC produced an error.
   bool preprocess_model() const;
 };
 
