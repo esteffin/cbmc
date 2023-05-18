@@ -9,6 +9,8 @@
 #include <solvers/smt2_incremental/ast/smt_terms.h>
 #include <solvers/smt2_incremental/construct_value_expr_from_smt.h>
 
+#include "c_types.h"
+
 class value_expr_from_smt_factoryt : public smt_term_const_downcast_visitort
 {
 private:
@@ -68,6 +70,10 @@ private:
         "Width of smt bit vector term must match the width of bit vector "
         "type.");
       result = from_integer(bit_vector_constant.value(), type_to_construct);
+      return;
+    }
+    if (const auto c_enum_tag_type = type_try_dynamic_cast<c_enum_tag_typet>(type_to_construct)) {
+      result = from_integer(bit_vector_constant.value(), unsigned_int_type());
       return;
     }
 

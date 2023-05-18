@@ -386,6 +386,9 @@ array_exprt smt2_incremental_decision_proceduret::get_expr(
   return array_exprt{elements, type};
 }
 
+#include <iostream>
+#include <c_types.h>
+
 exprt smt2_incremental_decision_proceduret::get_expr(
   const smt_termt &descriptor,
   const typet &type) const
@@ -407,8 +410,17 @@ exprt smt2_incremental_decision_proceduret::get_expr(
       "received multiple pairs - " +
       response.pretty()};
   }
-  return construct_value_expr_from_smt(
-    get_value_response->pairs()[0].get().value(), type);
+  auto resolved_type = type;
+  if (const auto c_enum_tag_type =
+       type_try_dynamic_cast<c_enum_tag_typet>(type)) {
+    const auto real_type = ns.follow_tag(*c_enum_tag_type);
+    std::cout << "Tracing: " << real_type.pretty() << std::endl;
+    resolved_type = real_type;
+  }
+  auto result_value = construct_value_expr_from_smt(
+    get_value_response->pairs()[0].get().value(), resolved_type);
+  result_value.type() = type;
+  return result_value;
 }
 
 // This is a fall back which builds resulting expression based on getting the
