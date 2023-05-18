@@ -237,7 +237,13 @@ struct sort_based_cast_to_bit_vector_convertert final
   void visit(const smt_bit_vector_sortt &) override
   {
     if(const auto bitvector = type_try_dynamic_cast<bitvector_typet>(from_type))
+    {
       result = make_bitvector_resize_cast(from_term, *bitvector, to_type);
+    }
+    else if (const auto c_enum_tag_type = type_try_dynamic_cast<c_enum_tag_typet>(from_type)) {
+      const auto int_counterpart = unsigned_int_type();
+      result = make_bitvector_resize_cast(from_term, int_counterpart, to_type);
+    }
     else
       UNIMPLEMENTED_FEATURE(
         "Generation of SMT formula for type cast to bit vector from type: " +
