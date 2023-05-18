@@ -97,6 +97,16 @@ static smt_sortt convert_type_to_smt_sort(const array_typet &type)
     convert_type_to_smt_sort(type.element_type())};
 }
 
+static smt_sortt convert_type_to_smt_sort(const c_enum_tag_typet &type)
+{
+  // C enum constants must be representable as int values according to the C99
+  // standard - “6.7.2.2 Enumeration specifiers - Constraints - The expression
+  // that defines the value of an enumeration constant shall be an integer
+  // constant expression that has a value representable as an int.” Therefore,
+  // we encode enums as bit vectors of the int type width.
+  return smt_bit_vector_sortt(unsigned_int_type().get_width());
+}
+
 smt_sortt convert_type_to_smt_sort(const typet &type)
 {
   if(const auto bool_type = type_try_dynamic_cast<bool_typet>(type))
@@ -110,6 +120,10 @@ smt_sortt convert_type_to_smt_sort(const typet &type)
   if(const auto array_type = type_try_dynamic_cast<array_typet>(type))
   {
     return convert_type_to_smt_sort(*array_type);
+  }
+  if(const auto enum_type = type_try_dynamic_cast<c_enum_tag_typet>(type))
+  {
+    return convert_type_to_smt_sort(*enum_type);
   }
   UNIMPLEMENTED_FEATURE("Generation of SMT formula for type: " + type.pretty());
 }
