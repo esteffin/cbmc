@@ -58,6 +58,8 @@ public:
   array_exprt get_expr(const smt_termt &array, const array_typet &type) const;
 
 protected:
+  exprt lower(exprt expression);
+
   // Implementation of protected decision_proceduret member function.
   resultt dec_solve() override;
   /// \brief Defines a function of array sort and asserts the element values
