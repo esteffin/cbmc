@@ -9,14 +9,19 @@
 #include <solvers/smt2_incremental/ast/smt_terms.h>
 #include <solvers/smt2_incremental/construct_value_expr_from_smt.h>
 
+#include <util/c_types.h>
+#include <util/namespace.h>
+
+
 class value_expr_from_smt_factoryt : public smt_term_const_downcast_visitort
 {
 private:
   const typet &type_to_construct;
+  const namespacet &ns;
   optionalt<exprt> result;
 
-  explicit value_expr_from_smt_factoryt(const typet &type_to_construct)
-    : type_to_construct{type_to_construct}, result{}
+  explicit value_expr_from_smt_factoryt(const typet &type_to_construct, const namespacet &ns)
+    : type_to_construct{type_to_construct}, ns{ns}, result{}
   {
   }
 
@@ -70,6 +75,11 @@ private:
       result = from_integer(bit_vector_constant.value(), type_to_construct);
       return;
     }
+    if (const auto c_enum_tag_type = type_try_dynamic_cast<c_enum_tag_typet>(type_to_construct)){
+      result = from_integer(bit_vector_constant.value(), ns.follow_tag(*c_enum_tag_type));
+      result->type() = type_to_construct;
+      return ;
+    }
 
     INVARIANT(
       false,
@@ -102,9 +112,9 @@ public:
   /// \brief This function is complete the external interface to this class. All
   ///   construction of this class and construction of expressions should be
   ///   carried out via this function.
-  static exprt make(const smt_termt &value_term, const typet &type_to_construct)
+  static exprt make(const smt_termt &value_term, const typet &type_to_construct, const namespacet &ns)
   {
-    value_expr_from_smt_factoryt factory{type_to_construct};
+    value_expr_from_smt_factoryt factory{type_to_construct, ns};
     value_term.accept(factory);
     INVARIANT(factory.result.has_value(), "Factory must result in expr value.");
     return *factory.result;
@@ -113,7 +123,8 @@ public:
 
 exprt construct_value_expr_from_smt(
   const smt_termt &value_term,
-  const typet &type_to_construct)
+  const typet &type_to_construct,
+  const namespacet &ns)
 {
-  return value_expr_from_smt_factoryt::make(value_term, type_to_construct);
+  return value_expr_from_smt_factoryt::make(value_term, type_to_construct, ns);
 }
