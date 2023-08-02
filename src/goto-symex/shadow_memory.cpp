@@ -170,7 +170,43 @@ void shadow_memoryt::symex_field_local_init(
   goto_symex_statet &state,
   const ssa_exprt &expr)
 {
-  // To be implemented
+  const symbolt &symbol =
+    ns.lookup(to_symbol_expr(expr.get_original_expr()).get_identifier());
+
+  const std::string symbol_name = id2string(symbol.name);
+  if(
+    symbol.is_auxiliary &&
+    symbol_name.find("::return_value") == std::string::npos)
+    return;
+  if(
+    symbol_name.find("malloc::") != std::string::npos &&
+    (symbol_name.find("malloc_size") != std::string::npos ||
+     symbol_name.find("malloc_res") != std::string::npos ||
+     symbol_name.find("record_malloc") != std::string::npos ||
+     symbol_name.find("record_may_leak") != std::string::npos))
+  {
+    return;
+  }
+  if(
+    symbol_name.find("__builtin_alloca::") != std::string::npos &&
+    (symbol_name.find("alloca_size") != std::string::npos ||
+     symbol_name.find("record_malloc") != std::string::npos ||
+     symbol_name.find("record_alloca") != std::string::npos ||
+     symbol_name.find("res") != std::string::npos))
+  {
+    return;
+  }
+  if(symbol_name.find("__cs_") != std::string::npos)
+    return;
+
+  const typet &type = expr.type();
+  ssa_exprt expr_l1 = remove_level_2(expr);
+  log.debug() << "Shadow memory: local memory "
+              << id2string(expr_l1.get_identifier()) << " of type "
+              << from_type(ns, "", type) << messaget::eom;
+
+  initialize_shadow_memory(
+    state, expr_l1, state.shadow_memory.fields.local_fields);
 }
 
 void shadow_memoryt::symex_field_dynamic_init(
