@@ -16,8 +16,10 @@ Author: Peter Schrammel
 #include <util/format_expr.h>
 #include <util/format_type.h>
 #include <util/fresh_symbol.h>
+#include <util/prefix.h>
 
 #include <langapi/language_util.h>
+#include <linking/static_lifetime_init.h>
 
 #include "goto_symex_state.h"
 #include "shadow_memory_util.h"
@@ -103,7 +105,38 @@ void shadow_memoryt::symex_field_static_init(
   goto_symex_statet &state,
   const ssa_exprt &lhs)
 {
-  // To be implemented
+  if(lhs.get_original_expr().id() != ID_symbol)
+    return;
+
+  const irep_idt &identifier =
+    to_symbol_expr(lhs.get_original_expr()).get_identifier();
+
+  if(state.source.function_id != INITIALIZE_FUNCTION)
+    return;
+
+  if(
+    has_prefix(id2string(identifier), CPROVER_PREFIX) &&
+    !has_prefix(id2string(identifier), CPROVER_PREFIX "errno"))
+  {
+    return;
+  }
+
+  const symbolt &symbol = ns.lookup(identifier);
+
+  if(
+    (id2string(symbol.name).find("::return_value") == std::string::npos &&
+     symbol.is_auxiliary) ||
+    !symbol.is_static_lifetime)
+    return;
+  if(id2string(symbol.name).find("__cs_") != std::string::npos)
+    return;
+
+  const typet &type = symbol.type;
+  log.debug() << "Shadow memory: global memory " << id2string(identifier)
+              << " of type " << from_type(ns, "", type) << messaget::eom;
+
+  initialize_shadow_memory(
+    state, lhs, state.shadow_memory.fields.global_fields);
 }
 
 void shadow_memoryt::symex_field_static_init_string_constant(
