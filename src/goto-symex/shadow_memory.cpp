@@ -16,7 +16,9 @@ Author: Peter Schrammel
 #include <util/format_expr.h>
 #include <util/format_type.h>
 #include <util/fresh_symbol.h>
+#include <util/pointer_expr.h>
 #include <util/prefix.h>
+#include <util/string_constant.h>
 
 #include <langapi/language_util.h>
 #include <linking/static_lifetime_init.h>
@@ -144,7 +146,24 @@ void shadow_memoryt::symex_field_static_init_string_constant(
   const ssa_exprt &expr,
   const exprt &rhs)
 {
-  // To be implemented
+  if(
+    expr.get_original_expr().id() == ID_symbol &&
+    has_prefix(
+      id2string(to_symbol_expr(expr.get_original_expr()).get_identifier()),
+      CPROVER_PREFIX))
+  {
+    return;
+  }
+  const index_exprt &index_expr =
+    to_index_expr(to_address_of_expr(rhs).object());
+
+  const typet &type = index_expr.array().type();
+  log.debug() << "Shadow memory: global memory "
+              << id2string(to_string_constant(index_expr.array()).get_value())
+              << " of type " << from_type(ns, "", type) << messaget::eom;
+
+  initialize_shadow_memory(
+    state, index_expr.array(), state.shadow_memory.fields.global_fields);
 }
 
 void shadow_memoryt::symex_field_local_init(
