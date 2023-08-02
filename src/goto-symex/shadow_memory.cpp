@@ -214,7 +214,11 @@ void shadow_memoryt::symex_field_dynamic_init(
   const exprt &expr,
   const side_effect_exprt &code)
 {
-  // To be implemented
+  log.debug() << "Shadow memory: dynamic memory of type "
+              << from_type(ns, "", expr.type()) << messaget::eom;
+
+  initialize_shadow_memory(
+    state, expr, state.shadow_memory.fields.global_fields);
 }
 
 shadow_memory_field_definitionst shadow_memoryt::gather_field_declarations(
