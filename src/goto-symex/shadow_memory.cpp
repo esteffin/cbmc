@@ -26,6 +26,15 @@ Author: Peter Schrammel
 #include "goto_symex_state.h"
 #include "shadow_memory_util.h"
 
+#include <regex>
+
+bool symbol_name_matches(const irep_idt &name, const std::string &regex)
+{
+  std::regex re{regex};
+  std::string string_name = id2string(name);
+  return std::regex_search(string_name, re);
+}
+
 void shadow_memoryt::initialize_shadow_memory(
   goto_symex_statet &state,
   exprt expr,
@@ -117,8 +126,8 @@ void shadow_memoryt::symex_field_static_init(
     return;
 
   if(
-    has_prefix(id2string(identifier), CPROVER_PREFIX) &&
-    !has_prefix(id2string(identifier), CPROVER_PREFIX "errno"))
+    symbol_name_matches(identifier, "^" CPROVER_PREFIX) &&
+    !symbol_name_matches(identifier, "^" CPROVER_PREFIX "errno"))
   {
     return;
   }
@@ -126,11 +135,11 @@ void shadow_memoryt::symex_field_static_init(
   const symbolt &symbol = ns.lookup(identifier);
 
   if(
-    (id2string(symbol.name).find("::return_value") == std::string::npos &&
+    (!symbol_name_matches(symbol.name, "::return_value") &&
      symbol.is_auxiliary) ||
     !symbol.is_static_lifetime)
     return;
-  if(id2string(symbol.name).find("__cs_") != std::string::npos)
+  if(symbol_name_matches(symbol.name, "__cs_"))
     return;
 
   const typet &type = symbol.type;
@@ -174,29 +183,23 @@ void shadow_memoryt::symex_field_local_init(
     ns.lookup(to_symbol_expr(expr.get_original_expr()).get_identifier());
 
   const std::string symbol_name = id2string(symbol.name);
-  if(
-    symbol.is_auxiliary &&
-    symbol_name.find("::return_value") == std::string::npos)
+  if(symbol.is_auxiliary && !symbol_name_matches(symbol_name, "::return_value"))
     return;
-  if(
-    symbol_name.find("malloc::") != std::string::npos &&
-    (symbol_name.find("malloc_size") != std::string::npos ||
-     symbol_name.find("malloc_res") != std::string::npos ||
-     symbol_name.find("record_malloc") != std::string::npos ||
-     symbol_name.find("record_may_leak") != std::string::npos))
+
+  // TODO: CHECK
+  if(symbol_name_matches(
+       symbol_name,
+       "^malloc::(malloc_size|malloc_res|record_malloc|record_may_leak)"))
   {
     return;
   }
-  if(
-    symbol_name.find("__builtin_alloca::") != std::string::npos &&
-    (symbol_name.find("alloca_size") != std::string::npos ||
-     symbol_name.find("record_malloc") != std::string::npos ||
-     symbol_name.find("record_alloca") != std::string::npos ||
-     symbol_name.find("res") != std::string::npos))
+  if(symbol_name_matches(
+       symbol_name,
+       "^__builtin_alloca::(alloca_size|record_malloc|record_alloca|res)"))
   {
     return;
   }
-  if(symbol_name.find("__cs_") != std::string::npos)
+  if(symbol_name_matches(symbol_name, "__cs_"))
     return;
 
   const typet &type = expr.type();
