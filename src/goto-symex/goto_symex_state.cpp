@@ -166,11 +166,34 @@ goto_symex_statet::rename_ssa<L0>(ssa_exprt ssa, const namespacet &ns);
 template renamedt<ssa_exprt, L1>
 goto_symex_statet::rename_ssa<L1>(ssa_exprt ssa, const namespacet &ns);
 
+bool lol(const exprt &expr)
+{
+  return expr.id() == ID_with && expr.type() == to_with_expr(expr).old().type();
+}
+
+irep_idt extract_idt_from_with_expr(const exprt &expr)
+{
+  if(const auto *with_expr = expr_try_dynamic_cast<with_exprt>(expr))
+  {
+    return extract_idt_from_with_expr(with_expr->old());
+  }
+  if(const auto *ssa_expr = expr_try_dynamic_cast<ssa_exprt>(expr))
+  {
+    return ssa_expr->id();
+  }
+  else
+    return {};
+}
+
 template <levelt level>
 renamedt<exprt, level>
 goto_symex_statet::rename(exprt expr, const namespacet &ns)
 {
   // rename all the symbols with their last known value
+  if(expr.id() == ID_with)
+  {
+    lol(expr);
+  }
 
   static_assert(
     level == L0 || level == L1 || level == L1_WITH_CONSTANT_PROPAGATION ||
@@ -256,21 +279,25 @@ goto_symex_statet::rename(exprt expr, const namespacet &ns)
   }
   else
   {
-    rename<level>(expr.type(), irep_idt(), ns);
+    // TODO: getting the name of the variable we are referring to
+    rename<level>(expr.type(), extract_idt_from_with_expr(expr), ns);
 
     // do this recursively
-    Forall_operands(it, expr)
-      *it = rename<level>(std::move(*it), ns).get();
+    if((expr).has_operands())
+    {
+      for(auto &it : (expr).operands())
+        it = rename<level>(std::move(it), ns).get();
+    }
 
     const exprt &c_expr = as_const(expr);
     // Big hack: Rename uses array_of values from propagation without having
     // updated the array size variable to the latest L2.
-    if(
-      expr.id() == ID_with &&
-      c_expr.type() != to_with_expr(c_expr).old().type())
-    {
-      expr.type() = to_with_expr(expr).old().type();
-    }
+//    if(
+//      expr.id() == ID_with &&
+//      c_expr.type() != to_with_expr(c_expr).old().type())
+//    {
+//      expr.type() = to_with_expr(expr).old().type();
+//    }
     INVARIANT_WITH_DIAGNOSTICS(
       expr.id() != ID_with ||
         c_expr.type() == to_with_expr(c_expr).old().type(),
@@ -652,6 +679,7 @@ static bool requires_renaming(const typet &type, const namespacet &ns)
   if(type.id() == ID_array)
   {
     const auto &array_type = to_array_type(type);
+    // TODO: I guess this should be an AND instead of a OR.
     return requires_renaming(array_type.element_type(), ns) ||
            !array_type.size().is_constant();
   }
@@ -711,9 +739,11 @@ void goto_symex_statet::rename(
   // to the given level
 
   std::pair<l1_typest::iterator, bool> l1_type_entry;
+  // TODO: Enrico: the first time `l1_identifier` is empty
   if(level==L2 &&
      !l1_identifier.empty())
   {
+    // TODO: Enrico: here the older is taken out from the map
     l1_type_entry=l1_types.insert(std::make_pair(l1_identifier, type));
 
     if(!l1_type_entry.second) // was already in map
@@ -765,6 +795,7 @@ void goto_symex_statet::rename(
     rename<level>(to_pointer_type(type).base_type(), irep_idt(), ns);
   }
 
+  // TODO: first time here `l1_type_entry.first->second` gets updated
   if(level==L2 &&
      !l1_identifier.empty())
     l1_type_entry.first->second=type;
