@@ -133,12 +133,19 @@ unsigned symex_level2t::latest_index(const irep_idt &identifier) const
   return !r_opt ? 0 : r_opt->get().second;
 }
 
+#include <iostream>
+
 std::size_t symex_level2t::increase_generation(
   const irep_idt &l1_identifier,
   const ssa_exprt &lhs,
   std::function<std::size_t(const irep_idt &)> fresh_l2_name_provider)
 {
   const std::size_t n = fresh_l2_name_provider(l1_identifier);
+
+  if ((id2string(l1_identifier) == "symex_dynamic::dynamic_object_size!0") && (n == 2))
+  {
+    std::cout << "Hello" << std::endl;
+  }
 
   if(const auto r_opt = current_names.find(l1_identifier))
   {

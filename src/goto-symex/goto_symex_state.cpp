@@ -185,6 +185,16 @@ irep_idt extract_idt_from_with_expr(const exprt &expr)
     return {};
 }
 
+irep_idt extract_idt_from_with_type(const typet &type)
+{
+  if(const auto *array_type = type_try_dynamic_cast<array_typet>(type))
+  {
+    return array_type->size().id();
+  }
+  else
+    return {};
+}
+
 template <levelt level>
 renamedt<exprt, level>
 goto_symex_statet::rename(exprt expr, const namespacet &ns)
@@ -280,7 +290,8 @@ goto_symex_statet::rename(exprt expr, const namespacet &ns)
   else
   {
     // TODO: getting the name of the variable we are referring to
-    rename<level>(expr.type(), extract_idt_from_with_expr(expr), ns);
+//    rename<level>(expr.type(), extract_idt_from_with_expr(expr), ns);
+    rename<level>(expr.type(), extract_idt_from_with_type(expr.type()), ns);
 
     // do this recursively
     if((expr).has_operands())
@@ -289,6 +300,8 @@ goto_symex_statet::rename(exprt expr, const namespacet &ns)
         it = rename<level>(std::move(it), ns).get();
     }
 
+//    rename<level>(expr.type(), extract_idt_from_with_expr(expr), ns);
+//    rename<level>(expr.type(), irep_idt(), ns);
     const exprt &c_expr = as_const(expr);
     // Big hack: Rename uses array_of values from propagation without having
     // updated the array size variable to the latest L2.
