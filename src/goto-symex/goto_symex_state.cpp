@@ -291,7 +291,7 @@ goto_symex_statet::rename(exprt expr, const namespacet &ns)
   {
     // TODO: getting the name of the variable we are referring to
 //    rename<level>(expr.type(), extract_idt_from_with_expr(expr), ns);
-    rename<level>(expr.type(), extract_idt_from_with_type(expr.type()), ns);
+//    rename<level>(expr.type(), extract_idt_from_with_type(expr.type()), ns);
 
     // do this recursively
     if((expr).has_operands())
@@ -300,14 +300,25 @@ goto_symex_statet::rename(exprt expr, const namespacet &ns)
         it = rename<level>(std::move(it), ns).get();
     }
 
-//    rename<level>(expr.type(), extract_idt_from_with_expr(expr), ns);
-//    rename<level>(expr.type(), irep_idt(), ns);
+    if (const auto *with_expr = expr_try_dynamic_cast<with_exprt>(expr)) {
+      rename<level>(expr.type(),extract_idt_from_with_type(with_expr->old().type()), ns);
+    }
+    else {
+      rename<level>(expr.type(), irep_idt(), ns);
+    }
     const exprt &c_expr = as_const(expr);
-    // Big hack: Rename uses array_of values from propagation without having
-    // updated the array size variable to the latest L2.
+
+    // It may happen that the old of a with expression is propagated with a
+    // value that has a type with a size that is a symbol with an L2 index that
+    // is different, so the type of the with_exprt will not match with the old
+    // type anymore.
+    // To address this issue we re-canonicalize the with_exprt by propagating
+    // the type of the old expression to the type of the with_exprt.
+
 //    if(
 //      expr.id() == ID_with &&
 //      c_expr.type() != to_with_expr(c_expr).old().type())
+//      Check that the 2 types are array types as well
 //    {
 //      expr.type() = to_with_expr(expr).old().type();
 //    }
