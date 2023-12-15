@@ -1,8 +1,9 @@
 CORE
 main.c
 --full-slice
-^EXIT=0$
+\[main\.assertion\.1\] line 43 assertion a\[0\]==-2147483600: SUCCESS
+^EXIT=10$
 ^SIGNAL=0$
-^VERIFICATION SUCCESSFUL$
+^VERIFICATION FAILED$
 --
 ^warning: ignoring

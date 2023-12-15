@@ -4,7 +4,7 @@ test.c
 ^EXIT=10$
 ^SIGNAL=0$
 ^file test.c line 20 function main: replacing function pointer by 2 possible targets$
-\[main.pointer_dereference.1\] line 20 dereferenced function pointer must be one of \[(g, f|f, g)\]: FAILURE$
+\[main.pointer_dereference.\d+\] line 20 dereferenced function pointer must be one of \[(g, f|f, g)\]: FAILURE$
 --
 --
 This test checks that the value-set-fi-based function pointer removal

@@ -1,7 +1,8 @@
 CORE
 main.c
 --model-argc-argv 3 --dump-c --harness
-^EXIT=0$
+\[__CPROVER_main\.assertion\.1\] line 49 assertion argc < 2 || argv\[1l\] != \(\(char *\)NULL\): SUCCESS
+^EXIT=10$
 ^SIGNAL=0$
 Adding up to 3 command line arguments
 --
