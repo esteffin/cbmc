@@ -1,4 +1,4 @@
-CORE
+CORE no-new-smt
 test_malloc_less_than_bound.c
 --pointer-check
 ^EXIT=10$
