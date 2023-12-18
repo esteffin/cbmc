@@ -1,6 +1,6 @@
 CORE
 main.c
---no-malloc-fail
+--no-malloc-may-fail
 ^EXIT=10$
 ^SIGNAL=0$
 ^\[main.pointer_primitives.\d+\] line 7 pointer invalid in R_OK\(p1, \(unsigned (long (long )?)?int\)1\): FAILURE$
