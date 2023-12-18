@@ -1,6 +1,6 @@
 CORE
 b.c
-a.c
+--no-malloc-fail a.c
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$

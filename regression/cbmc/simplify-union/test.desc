@@ -1,6 +1,6 @@
 CORE
 main.c
-
+--no-malloc-fail
 ^Generated 13 VCC\(s\), 0 remaining after simplification$
 ^VERIFICATION SUCCESSFUL$
 ^EXIT=0$

@@ -1,6 +1,6 @@
 CORE no-new-smt
 main.c
---paths lifo
+--no-malloc-fail --paths lifo
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$
