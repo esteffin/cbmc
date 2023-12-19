@@ -22,7 +22,14 @@ else
 fi
 
 args=${*:1:$#-1}
-
+if [[ "$args" != *" _ "* ]]
+then
+  args_harness=$args
+  args_cbmc=""
+else
+  args_harness="${args%%" _ "*}"
+  args_cbmc="${args#*" _ "}"
+fi
 
 cleanup()
 {
@@ -54,18 +61,20 @@ fi
 
 # `# some comment` is an inline comment - basically, cause bash to execute an empty command
 $cbmc --show-goto-functions "$input_goto_binary"
-$goto_harness "$input_goto_binary" "$harness_file" --harness-function-name $entry_point ${args}
+$goto_harness "$input_goto_binary" "$harness_file" --harness-function-name $entry_point ${args_harness}
 $cbmc --show-goto-functions "$harness_file"
 if [[ "${harness_file}" == "harness.gb" ]];then
   $cbmc --function $entry_point "$harness_file" \
     --pointer-check `# because we want to see out of bounds errors` \
     --unwind 11 `# with the way we set up arrays symex can't figure out loop bounds automatically` \
     --unwinding-assertions `# we want to make sure we don't accidentally pass tests because we didn't unwind enough` \
+    ${args_cbmc} `# extra cbmc-related arguments` \
     # cbmc args end
 else
 $cbmc --function $entry_point "$input_c_file" "$harness_file" \
   --pointer-check `# because we want to see out of bounds errors` \
   --unwind 11 `# with the way we set up arrays symex can't figure out loop bounds automatically` \
   --unwinding-assertions `# we want to make sure we don't accidentally pass tests because we didn't unwind enough` \
+  ${args_cbmc} `# extra cbmc-related arguments` \
   # cbmc args end
 fi
