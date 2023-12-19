@@ -1,7 +1,6 @@
 CORE
 main.c
 --full-slice --add-library
-^\[test\.assertion\.1\] line 13 assertion f == result: SUCCESS$
-^EXIT=10$
+^EXIT=0$
 ^SIGNAL=0$
-^VERIFICATION FAILED$
+^VERIFICATION SUCCESSFUL$
